@@ -138,7 +138,7 @@ if (empty($reshook)) {
                     $objectLinked->updateExtrafield('projectaddress');
                 }
 
-                $geolocations = $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
+                $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
                 $geolocation->delete($user, false, false);
 
                 setEventMessages($langs->trans('AddressDeleted'), []);
@@ -158,14 +158,22 @@ if (empty($reshook)) {
             $contact->address  = $addressAddress;
             $contact->update($addressID, $user);
 
-            $geolocations = $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
-            $data         = $geolocation->getDataFromOSM($contact->address);
+            $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
+            $data = $geolocation->getDataFromOSM($contact);
             if (is_array($data) && !empty($data)) {
                 $address = $data[0];
 
-                $geolocation->latitude  = $address->lat;
-                $geolocation->longitude = $address->lon;
-                $geolocation->update($user);
+                if (empty($geolocation->id)) {
+                    $geolocation->element_type = 'contact';
+                    $geolocation->latitude   = $address->lat;
+                    $geolocation->longitude  = $address->lon;
+                    $geolocation->fk_element = $addressID;
+                    $geolocation->create($user);
+                } else {
+                    $geolocation->latitude  = $address->lat;
+                    $geolocation->longitude = $address->lon;
+                    $geolocation->update($user);
+                }
             }
             setEventMessages($langs->trans('AddressUpdated'), []);
         }
@@ -216,7 +224,7 @@ if ($action == 'create' && $fromId > 0) {
 
     // Address -- Adresse
     print '<tr><td class="fieldrequired">' . $langs->trans('Address') . '</td><td>';
-    $doleditor = new DolEditor('addressDetail', GETPOST('description'), '', 90, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_3, '90%');
+    $doleditor = new DolEditor('addressDetail', GETPOST('description'), '', 90, 'dolibarr_details', '', false, true, 0, ROWS_3, '50%');
     $doleditor->Create();
     print '</td></tr>';
 
@@ -255,7 +263,7 @@ if ($action == 'create' && $fromId > 0) {
 
     // Address -- Adresse
     print '<tr><td class="fieldrequired">' . $langs->trans('Address') . '</td><td>';
-    $doleditor = new DolEditor('addressDetail', $contact->address, '', 90, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_3, '90%');
+    $doleditor = new DolEditor('addressDetail', $contact->address, '', 90, 'dolibarr_details', '', false, true, 0, ROWS_3, '50%');
     $doleditor->Create();
     print '</td></tr>';
 

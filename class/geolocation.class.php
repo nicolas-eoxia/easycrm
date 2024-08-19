@@ -196,12 +196,14 @@ class Geolocation extends SaturneObject
     /**
      * Get data from OpenStreetMap API with an address
      *
-     * @param  string $address Address to get the geolocation from
+     * @param  Object $contact Object contact/address to get the geolocation from
      * @return array
      */
-    public function getDataFromOSM($address)
+    public function getDataFromOSM($contact): array
     {
-        $parameters = (dol_strlen($address) > 0 ? $address : '');
+        global $user;
+
+        $parameters = (dol_strlen($contact->address) > 0 ? $contact->address : '');
         $parameters = dol_sanitizeFileName($parameters);
         $parameters = str_replace(' ', '+', $parameters);
 
@@ -209,6 +211,25 @@ class Geolocation extends SaturneObject
         $response = file_get_contents('https://nominatim.openstreetmap.org/search?q='. $parameters .'&format=json&polygon=1&addressdetails=1', false, $context);
         $data     = json_decode($response, false);
 
-        return $data;
+        if (is_array($data) && !empty($data)) {
+            $address = $data[0];
+            if (!empty($address->address->postcode)) {
+                $contact->zip = strval($address->address->postcode);
+            }
+            if (!empty($address->address->city)) {
+                $contact->town = $address->address->city;
+            }
+            if (!empty($address->address->country_code)) {
+                $countryID = getCountry(dol_strtoupper($address->address->country_code),3);
+                if ($countryID > 0) {
+                    $contact->country_id = $countryID;
+                }
+            }
+            $contact->update($contact->id, $user);
+
+            return $data;
+        } else {
+            return [];
+        }
     }
 }

@@ -121,7 +121,7 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                         $contact->fetch($lastContact['id']);
 
                         $geolocation = new Geolocation($this->db);
-                        $data        = $geolocation->getDataFromOSM($contact->address);
+                        $data        = $geolocation->getDataFromOSM($contact);
 
                         if (is_array($data) && !empty($data)) {
                             $address = $data[0];
