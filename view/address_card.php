@@ -71,6 +71,7 @@ $objectInfos  = saturne_get_objects_metadata($objectType);
 $className    = $objectInfos['class_name'];
 $objectLinked = new $className($db);
 $object       = new Address($db);
+$contact      = new Contact($db);
 $geolocation  = new Geolocation($db);
 
 // Initialize view objects
@@ -109,32 +110,16 @@ if (empty($reshook)) {
 			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '&name=' . $addressName . '&address_type=' . $addressType . '&fk_country=' . $addressCountry . '&fk_region=' . $addressRegion . '&fk_state=' . $addressState . '&address_type=' . $addressType . '&town=' . $addressTown . '&zip=' . $addressZip . '&address=' . $addressAddress);
 			exit;
 		} else {
-            $object->ref           = $object->getNextNumRef();
-			$object->name          = $addressName;
-			$object->type          = $addressType;
-			$object->fk_country    = $addressCountry;
-			$object->fk_region     = $addressRegion;
-			$object->fk_department = $addressState;
-			$object->town          = $addressTown;
-			$object->zip           = $addressZip;
-			$object->address       = $addressAddress;
-			$object->element_type  = $objectType;
-			$object->element_id    = $fromId;
+            $contact->lastname   = $addressName;
+            $contact->address    = $addressAddress;
+            $contact->fk_project = $fromId;
+            $addressID           = $contact->create($user);
 
-			$result = $object->create($user);
+            $project = new Project($db);
+            $project->fetch($fromId);
+            $project->add_contact($addressID, 'PROJECTADDRESS');
 
-			if ($result > 0) {
-				if ($object->status == $object::STATUS_NOT_FOUND) {
-					setEventMessages($langs->trans('CouldntFindDataOnOSM'), [], 'errors');
-				} else if ($object->status == $object::STATUS_ACTIVE) {
-                    $geolocation->latitude     = $object->latitude;
-                    $geolocation->longitude    = $object->longitude;
-                    $geolocation->element_type = $object->element_type;
-                    $geolocation->fk_element   = $fromId;
-                    $geolocation->fk_address   = $result;
-                    $geolocation->create($user);
-					setEventMessages($langs->trans('DataSuccessfullyRetrieved'), []);
-				}
+			if ($addressID > 0) {
 				setEventMessages($langs->trans('AddressCreated'), []);
 			} else {
 				setEventMessages($langs->trans('ErrorCreateAddress'), [], 'errors');

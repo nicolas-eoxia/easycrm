@@ -133,7 +133,7 @@ Headquarters                 = Siège social
 DisplayAllAddress            = Afficher une seule adresse par objet
 DisplayAllAddressDescription = Afficher l'adresse principale sur la carte au lieu de toutes les adresses liées à l'objet
 AddressesList                = Liste des adresses
-
+ProjectAddress               = Adresse du projet
 
 
 #

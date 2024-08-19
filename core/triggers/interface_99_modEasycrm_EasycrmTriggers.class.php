@@ -111,6 +111,38 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                 $object->fetch($object->id);
                 set_notation_object_contact($object);
                 break;
+            case 'PROJECT_ADD_CONTACT':
+                $contacts = $object->liste_contact();
+
+                if (is_array($contacts) && !empty($contacts)) {
+                    $lastContact = end($contacts);
+                    if ($lastContact['code'] == 'PROJECTADDRESS') {
+                        $contact = new Contact($this->db);
+                        $contact->fetch($lastContact['id']);
+
+                        $parameters     = (dol_strlen($contact->address) > 0 ? $contact->address : '');
+                        $parameters     = dol_sanitizeFileName($parameters);
+                        $parameters     = str_replace(' ', '+', $parameters);
+
+                        $context  = stream_context_create(["http" => ["header" => "Referer:" . $_SERVER['HTTP_REFERER']]]);
+                        $response = file_get_contents('https://nominatim.openstreetmap.org/search?q='. $parameters .'&format=json&polygon=1&addressdetails=1', false, $context);
+                        $data     = json_decode($response, false);
+
+                        if (is_array($data) && !empty($data)) {
+                            $address = $data[0];
+
+                            $geolocation = new Geolocation($this->db);
+
+                            $geolocation->element_type('project');
+                            $geolocation->latitude  = $address->lat;
+                            $geolocation->longitude = $address->lon;
+                            $geolocation->fk_element = $lastContact['id'];
+                            $geolocation->create($user);
+                        }
+                    }
+
+                }
+                break;
             case 'FACTURE_ADD_CONTACT' :
                 $actioncomm->elementtype = $object->element;
                 $actioncomm->code        = 'AC_' . strtoupper($object->element) . '_ADD_CONTACT';
