@@ -192,4 +192,23 @@ class Geolocation extends SaturneObject
 
         return $error > 0 ? -1 : 0;
     }
+
+    /**
+     * Get data from OpenStreetMap API with an address
+     *
+     * @param  string $address Address to get the geolocation from
+     * @return array
+     */
+    public function getDataFromOSM($address)
+    {
+        $parameters = (dol_strlen($address) > 0 ? $address : '');
+        $parameters = dol_sanitizeFileName($parameters);
+        $parameters = str_replace(' ', '+', $parameters);
+
+        $context  = stream_context_create(["http" => ["header" => "Referer:" . $_SERVER['HTTP_REFERER']]]);
+        $response = file_get_contents('https://nominatim.openstreetmap.org/search?q='. $parameters .'&format=json&polygon=1&addressdetails=1', false, $context);
+        $data     = json_decode($response, false);
+
+        return $data;
+    }
 }

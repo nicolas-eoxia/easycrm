@@ -149,6 +149,28 @@ if (empty($reshook)) {
 		}
 	}
 
+    if ($action == 'edit_address' && $permissiontoadd && !$cancel) {
+        $addressID = GETPOST('addressID');
+
+        if ($addressID > 0) {
+            $contact->fetch($addressID);
+            $contact->lastname = $addressName;
+            $contact->address  = $addressAddress;
+            $contact->update($addressID, $user);
+
+            $geolocations = $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
+            $data         = $geolocation->getDataFromOSM($contact->address);
+            if (is_array($data) && !empty($data)) {
+                $address = $data[0];
+
+                $geolocation->latitude  = $address->lat;
+                $geolocation->longitude = $address->lon;
+                $geolocation->update($user);
+            }
+            setEventMessages($langs->trans('AddressUpdated'), []);
+        }
+    }
+
     if ($action == 'toggle_favorite') {
         $favoriteAddressId = GETPOST('favorite_id');
 
@@ -205,16 +227,21 @@ if ($action == 'create' && $fromId > 0) {
     print $form->buttonsSaveCancel('Create', 'Cancel', [], false, 'wpeo-button');
 } else if ($action == 'edit' && $fromId > 0) {
     $objectLinked->fetch($fromId);
+    $addressID = GETPOST('addressID');
+
+    $contact = new Contact($db);
+    $contact->fetch($addressID);
 
     saturne_get_fiche_head($objectLinked, 'address', $title);
 
-    print load_fiche_titre($langs->trans('NewAddress'), $backtopage, $contact->picto);
+    print load_fiche_titre($langs->trans('EditAddress'), $backtopage, $contact->picto);
 
     print dol_get_fiche_head();
 
     print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType . '">';
     print '<input type="hidden" name="token" value="'.newToken().'">';
-    print '<input type="hidden" name="action" value="add_address">';
+    print '<input type="hidden" name="action" value="edit_address">';
+    print '<input type="hidden" name="addressID" value="' . $addressID . '">';
     if ($backtopage) {
         print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
     }
@@ -223,12 +250,12 @@ if ($action == 'create' && $fromId > 0) {
 
     // Name -- Nom
     print '<tr><td class="fieldrequired">' . $langs->trans('Name') . '</td><td>';
-    print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="name" id="name" value="' . $addressName . '">';
+    print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="name" id="name" value="' . $contact->lastname . '">';
     print '</td></tr>';
 
     // Address -- Adresse
     print '<tr><td class="fieldrequired">' . $langs->trans('Address') . '</td><td>';
-    $doleditor = new DolEditor('addressDetail', GETPOST('description'), '', 90, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_3, '90%');
+    $doleditor = new DolEditor('addressDetail', $contact->address, '', 90, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_3, '90%');
     $doleditor->Create();
     print '</td></tr>';
 
@@ -236,7 +263,7 @@ if ($action == 'create' && $fromId > 0) {
 
     print dol_get_fiche_end();
 
-    print $form->buttonsSaveCancel('Create', 'Cancel', [], false, 'wpeo-button');
+    print $form->buttonsSaveCancel('Edit', 'Cancel', [], false, 'wpeo-button');
 } else if ($fromId > 0 || !empty($ref) && empty($action)) {
     $objectLinked->fetch($fromId);
 

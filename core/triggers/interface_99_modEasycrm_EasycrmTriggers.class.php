@@ -120,20 +120,13 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                         $contact = new Contact($this->db);
                         $contact->fetch($lastContact['id']);
 
-                        $parameters     = (dol_strlen($contact->address) > 0 ? $contact->address : '');
-                        $parameters     = dol_sanitizeFileName($parameters);
-                        $parameters     = str_replace(' ', '+', $parameters);
-
-                        $context  = stream_context_create(["http" => ["header" => "Referer:" . $_SERVER['HTTP_REFERER']]]);
-                        $response = file_get_contents('https://nominatim.openstreetmap.org/search?q='. $parameters .'&format=json&polygon=1&addressdetails=1', false, $context);
-                        $data     = json_decode($response, false);
+                        $geolocation = new Geolocation($this->db);
+                        $data        = $geolocation->getDataFromOSM($contact->address);
 
                         if (is_array($data) && !empty($data)) {
                             $address = $data[0];
 
-                            $geolocation = new Geolocation($this->db);
-
-                            $geolocation->element_type('project');
+                            $geolocation->element_type = 'contact';
                             $geolocation->latitude   = $address->lat;
                             $geolocation->longitude  = $address->lon;
                             $geolocation->fk_element = $lastContact['id'];

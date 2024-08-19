@@ -59,6 +59,15 @@ if (is_array($addresses) && !empty($addresses)) {
 
 		// Actions
 		print '<td class="right">';
+        if ($permissiontoadd) {
+            print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&action=edit&from_type=' . $objectType . '">';
+            print '<input type="hidden" name="token" value="' . newToken() . '">';
+            print '<input type="hidden" name="addressID" value="' . $element['id'] . '">';
+            if (!empty($backtopage)) {
+                print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
+            }
+            print '<button type="submit" class="wpeo-button button-grey"><i class="fas fa-pen"></i></button> ';
+        }
 		if ($permissiontodelete) {
 			print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&module_name=' . $moduleName . '&from_type=' . $objectLinked->element . '">';
 			print '<input type="hidden" name="token" value="' . newToken() . '">';
