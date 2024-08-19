@@ -292,15 +292,15 @@ class ActionsEasycrm
      */
     public function printCommonFooter(array $parameters): int
     {
-        global $conf, $db, $langs, $object, $user;
+        global $conf, $db, $langs, $module, $object, $user;
 
         // Do something only for the current context
         if (preg_match('/thirdpartycomm|projectcard/', $parameters['context'])) {
+            $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
+            $pictoMod  = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+
             if (isModEnabled('agenda')) {
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
-
-                $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
-                $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
 
                 $actionComm = new ActionComm($db);
 
@@ -322,7 +322,7 @@ class ActionsEasycrm
                 }
 
                 $url = '?socid=' . $object->socid . '&fromtype=project' . '&project_id=' . $object->id . '&action=create&token=' . newToken();
-                $out = '<tr><td class="titlefield">' . $picto . $langs->trans('CommercialsRelaunching') . '</td>';
+                $out = '<tr><td class="titlefield">' . $pictoMod . $langs->trans('CommercialsRelaunching') . '</td>';
 
                 $picto = img_picto($langs->trans('CommercialsRelaunching'), 'fontawesome_fa-headset_fas');
 
@@ -344,6 +344,20 @@ class ActionsEasycrm
                 </script>
                 <?php
             }
+
+            $contact = new Contact($db);
+            $contact->fetch($object->array_options['options_projectaddress']);
+            $address = $contact->getNomUrl(1);
+            $outAddress = '<td>' . $address . ' ';
+            if ($user->hasRight('projet','write')) {
+                $outAddress .= dolButtonToOpenUrlInDialogPopup('addAddress' . $object->id, $langs->transnoentities('AddAnAddress'), '<span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('AddAnAddress') . '"></span>', '/custom/easycrm/view/address_card.php?from_id='. $object->id .'&from_type=project');
+            }
+            $outAddress .= '</td></tr>';
+            ?>
+            <script>
+                jQuery('.valuefield.project_extras_projectaddress').replaceWith(<?php echo json_encode($outAddress); ?>)
+            </script>
+            <?php
         }
 
         // Do something only for the current context

@@ -134,8 +134,8 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                             $geolocation = new Geolocation($this->db);
 
                             $geolocation->element_type('project');
-                            $geolocation->latitude  = $address->lat;
-                            $geolocation->longitude = $address->lon;
+                            $geolocation->latitude   = $address->lat;
+                            $geolocation->longitude  = $address->lon;
                             $geolocation->fk_element = $lastContact['id'];
                             $geolocation->create($user);
                         }

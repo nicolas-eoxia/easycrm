@@ -33,6 +33,7 @@ if (file_exists('../easycrm.main.inc.php')) {
 // Load Dolibarr libraries
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/doleditor.class.php';
 
 // Load Saturne librairies
 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
@@ -49,13 +50,7 @@ saturne_load_langs();
 
 // Get create parameters
 $addressName    = GETPOST('name');
-$addressType    = GETPOST('address_type');
-$addressCountry = GETPOST('fk_country', 'int');
-$addressRegion  = GETPOST('fk_region', 'int');
-$addressState   = GETPOST('fk_state', 'int');
-$addressTown    = GETPOST('town');
-$addressZip     = GETPOST('zip');
-$addressAddress = GETPOST('address');
+$addressAddress = GETPOST('addressDetail');
 
 // Get parameters
 $fromId      = GETPOST('from_id', 'int');
@@ -70,9 +65,10 @@ $backtopage  = GETPOST('backtopage', 'alpha');
 $objectInfos  = saturne_get_objects_metadata($objectType);
 $className    = $objectInfos['class_name'];
 $objectLinked = new $className($db);
-$object       = new Address($db);
 $contact      = new Contact($db);
 $geolocation  = new Geolocation($db);
+$project      = new Project($db);
+$project->fetch($fromId);
 
 // Initialize view objects
 $form        = new Form($db);
@@ -105,9 +101,9 @@ if (empty($reshook)) {
 
 	// Action to add address
 	if ($action == 'add_address' && $permissiontoadd && !$cancel) {
-		if (empty($addressName) || empty($addressType) || empty($addressCountry) || empty($addressTown)) {
+		if (empty($addressName) || empty($addressAddress)) {
 			setEventMessages($langs->trans('EmptyValue'), [], 'errors');
-			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '&name=' . $addressName . '&address_type=' . $addressType . '&fk_country=' . $addressCountry . '&fk_region=' . $addressRegion . '&fk_state=' . $addressState . '&address_type=' . $addressType . '&town=' . $addressTown . '&zip=' . $addressZip . '&address=' . $addressAddress);
+			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '&name=' . $addressName . '&address=' . $addressAddress);
 			exit;
 		} else {
             $contact->lastname   = $addressName;
@@ -115,8 +111,6 @@ if (empty($reshook)) {
             $contact->fk_project = $fromId;
             $addressID           = $contact->create($user);
 
-            $project = new Project($db);
-            $project->fetch($fromId);
             $project->add_contact($addressID, 'PROJECTADDRESS');
 
 			if ($addressID > 0) {
@@ -133,9 +127,9 @@ if (empty($reshook)) {
 		$addressID = GETPOST('addressID');
 
 		if ($addressID > 0) {
-			$object->fetch($addressID);
+			$contact->fetch($addressID);
 
-			$result = $object->delete($user);
+			$result = $contact->delete($user);
 
 			if ($result > 0) {
                 $objectLinked->fetch($fromId);
@@ -144,7 +138,7 @@ if (empty($reshook)) {
                     $objectLinked->updateExtrafield('projectaddress');
                 }
 
-                $geolocations = $geolocation->fetch('', '', ' AND fk_address = ' . $addressID);
+                $geolocations = $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
                 $geolocation->delete($user, false, false);
 
                 setEventMessages($langs->trans('AddressDeleted'), []);
@@ -180,7 +174,7 @@ if ($action == 'create' && $fromId > 0) {
 
     saturne_get_fiche_head($objectLinked, 'address', $title);
 
-    print load_fiche_titre($langs->trans("NewAddress"), $backtopage, $object->picto);
+    print load_fiche_titre($langs->trans('NewAddress'), $backtopage, $contact->picto);
 
     print dol_get_fiche_head();
 
@@ -191,37 +185,54 @@ if ($action == 'create' && $fromId > 0) {
         print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
     }
 
-	print '<table class="border centpercent tableforfieldcreate address-table">'."\n";
+	print '<table class="border centpercent tableforfieldcreate address-table">';
 
 	// Name -- Nom
-	print '<tr><td class="fieldrequired">'.$langs->trans("Name").'</td><td>';
-	print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="name" id="name" value="'.$addressName.'">';
+	print '<tr><td class="fieldrequired">' . $langs->trans('Name') . '</td><td>';
+	print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="name" id="name" value="' . $addressName . '">';
 	print '</td></tr>';
 
-	// Type -- Type
-	print '<tr><td class="fieldrequired"><label class="" for="type">' . $langs->trans("Type") . '</label></td><td>';
-	print saturne_select_dictionary('address_type','c_address_type', 'ref', 'label', $addressType, 0, '', '', 'minwidth300 maxwidth300');
-	print '</td></tr>';
-
-	// Country -- Pays
-	print '<tr><td class="fieldrequired"><label class="" for="type">' . $langs->trans("Country") . '</label></td><td>';
-	print $formcompany->select_country($addressCountry, 'fk_country', '', 0, 'minwidth300 maxwidth300') . ' ' . img_picto('', 'country', 'class="pictofixedwidth"');
-	print '</td></tr>';
-
-	// Region -- Region
-	print '<tr><td class=""><label class="" for="type">' . $langs->trans("Region") . '</label></td><td>';
-	print $formcompany->select_region($addressRegion, 'fk_region') . ' ' . img_picto('', 'state', 'class="pictofixedwidth"');;
-	print '</td></tr>';
-
-	// State - Departements
-	print '<tr><td class=""><label class="" for="type">' . $langs->trans("State") . '</label></td><td>';
-	print $formcompany->select_state($addressState, '', 'fk_state', 'minwidth300 maxwidth300') . ' ' . img_picto('', 'state', 'class="pictofixedwidth"');
-	print '</td></tr>';
-
-    // Common attributes
-    include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
+    // Address -- Adresse
+    print '<tr><td class="fieldrequired">' . $langs->trans('Address') . '</td><td>';
+    $doleditor = new DolEditor('addressDetail', GETPOST('description'), '', 90, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_3, '90%');
+    $doleditor->Create();
+    print '</td></tr>';
 
 	print '</table></br>';
+
+    print dol_get_fiche_end();
+
+    print $form->buttonsSaveCancel('Create', 'Cancel', [], false, 'wpeo-button');
+} else if ($action == 'edit' && $fromId > 0) {
+    $objectLinked->fetch($fromId);
+
+    saturne_get_fiche_head($objectLinked, 'address', $title);
+
+    print load_fiche_titre($langs->trans('NewAddress'), $backtopage, $contact->picto);
+
+    print dol_get_fiche_head();
+
+    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType . '">';
+    print '<input type="hidden" name="token" value="'.newToken().'">';
+    print '<input type="hidden" name="action" value="add_address">';
+    if ($backtopage) {
+        print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+    }
+
+    print '<table class="border centpercent tableforfieldcreate address-table">';
+
+    // Name -- Nom
+    print '<tr><td class="fieldrequired">' . $langs->trans('Name') . '</td><td>';
+    print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="name" id="name" value="' . $addressName . '">';
+    print '</td></tr>';
+
+    // Address -- Adresse
+    print '<tr><td class="fieldrequired">' . $langs->trans('Address') . '</td><td>';
+    $doleditor = new DolEditor('addressDetail', GETPOST('description'), '', 90, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_3, '90%');
+    $doleditor->Create();
+    print '</td></tr>';
+
+    print '</table></br>';
 
     print dol_get_fiche_end();
 
@@ -240,21 +251,26 @@ if ($action == 'create' && $fromId > 0) {
 
 	print '<div class="addresses-container">';
 
-	$parameters = ['address' => $object];
+	$parameters = ['address' => $contact];
 	$reshook    = $hookmanager->executeHooks('easycrmAddressType', $parameters, $objectLinked); // Note that $action and $objectLinked may have been modified by some hooks
 	if ($reshook > 0) {
-		$addressByType = $hookmanager->resArray;
+        $addresses = $hookmanager->resArray;
 	} else {
-		$addressByType['Address'] = $object->fetchAddresses($objectLinked->id, $objectType);
+        $contacts = $project->liste_contact();
+        if (is_array($contacts) && !empty($contacts)) {
+            foreach($contacts as $contactSingle) {
+                if ($contactSingle['code'] == 'PROJECTADDRESS') {
+                    $addresses[] = $contactSingle;
+                }
+            }
+        }
 	}
 
-    print load_fiche_titre($langs->trans('AddressesList'), '', $object->picto);
+    print load_fiche_titre($langs->trans('AddressesList'), '', $contact->picto);
 
     $alreadyAddedAddress = [];
-	if (is_array($addressByType) && !empty($addressByType)) {
-		foreach ($addressByType as $addressType => $addresses) {
-			require __DIR__ . '/../core/tpl/easycrm_address_table_view.tpl.php';
-		}
+	if (is_array($addresses) && !empty($addresses)) {
+        require __DIR__ . '/../core/tpl/easycrm_address_table_view.tpl.php';
 	} else {
 		print '<div class="opacitymedium">' . $langs->trans('NoAddresses') . '</div>';
 	}
