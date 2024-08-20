@@ -39,7 +39,6 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/doleditor.class.php';
 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
 // Load EasyCRM librairies
-require_once __DIR__ . '/../class/address.class.php';
 require_once __DIR__ . '/../class/geolocation.class.php';
 
 // Global variables definitions
@@ -50,7 +49,7 @@ saturne_load_langs();
 
 // Get create parameters
 $addressName    = GETPOST('name');
-$addressAddress = GETPOST('addressDetail');
+$addressAddress = GETPOST('address_detail');
 
 // Get parameters
 $fromId      = GETPOST('from_id', 'int');
@@ -221,7 +220,7 @@ if ($action == 'create' && $fromId > 0) {
 
     // Address -- Adresse
     print '<tr><td class="fieldrequired">' . $langs->trans('Address') . '</td><td>';
-    $doleditor = new DolEditor('addressDetail', GETPOST('description'), '', 90, 'dolibarr_details', '', false, true, 0, ROWS_3, '50%');
+    $doleditor = new DolEditor('address_detail', GETPOST('description'), '', 90, 'dolibarr_details', '', false, true, 0, ROWS_3, '50%');
     $doleditor->Create();
     print '</td></tr>';
 
@@ -257,7 +256,7 @@ if ($action == 'create' && $fromId > 0) {
 
     // Address -- Adresse
     print '<tr><td class="fieldrequired">' . $langs->trans('Address') . '</td><td>';
-    $doleditor = new DolEditor('addressDetail', $contact->address, '', 90, 'dolibarr_details', '', false, true, 0, ROWS_3, '50%');
+    $doleditor = new DolEditor('address_detail', $contact->address, '', 90, 'dolibarr_details', '', false, true, 0, ROWS_3, '50%');
     $doleditor->Create();
     print '</td></tr>';
 

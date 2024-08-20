@@ -347,10 +347,11 @@ class ActionsEasycrm
 
             $contact = new Contact($db);
             $contact->fetch($object->array_options['options_projectaddress']);
-            $address = $contact->getNomUrl(1);
-            $outAddress = '<td>' . $address . ' ';
-            if ($user->hasRight('projet','write')) {
-                $outAddress .= dolButtonToOpenUrlInDialogPopup('addAddress' . $object->id, $langs->transnoentities('AddAnAddress'), '<span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('AddAnAddress') . '"></span>', '/custom/easycrm/view/address_card.php?from_id='. $object->id .'&from_type=project');
+            $address = img_picto('contact', 'contact') . ' ' . $contact->lastname;
+
+            $outAddress = '<td>';
+            if ($contact->id > 0) {
+                $outAddress .= dolButtonToOpenUrlInDialogPopup('address' . $object->id, $langs->transnoentities('FavoriteAddress'), $address, '/contact/card.php?id='. $contact->id);
             }
             $outAddress .= '</td></tr>';
             ?>

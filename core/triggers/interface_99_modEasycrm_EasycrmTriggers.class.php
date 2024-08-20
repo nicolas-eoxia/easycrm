@@ -112,28 +112,25 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                 set_notation_object_contact($object);
                 break;
             case 'PROJECT_ADD_CONTACT':
-                $contacts = $object->liste_contact();
+                require_once __DIR__ . '/../../class/geolocation.class.php';
 
-                if (is_array($contacts) && !empty($contacts)) {
-                    $lastContact = end($contacts);
-                    if ($lastContact['code'] == 'PROJECTADDRESS') {
-                        $contact = new Contact($this->db);
-                        $contact->fetch($lastContact['id']);
+                $contactID = GETPOST('contactid');
+                $contact   = new Contact($this->db);
+                $contact->fetch($contactID);
 
-                        $geolocation = new Geolocation($this->db);
-                        $data        = $geolocation->getDataFromOSM($contact);
+                if (dol_strlen($contact->address) > 0) {
+                    $geolocation = new Geolocation($this->db);
+                    $data        = $geolocation->getDataFromOSM($contact);
 
-                        if (is_array($data) && !empty($data)) {
-                            $address = $data[0];
+                    if (is_array($data) && !empty($data)) {
+                        $address = $data[0];
 
-                            $geolocation->element_type = 'contact';
-                            $geolocation->latitude   = $address->lat;
-                            $geolocation->longitude  = $address->lon;
-                            $geolocation->fk_element = $lastContact['id'];
-                            $geolocation->create($user);
-                        }
+                        $geolocation->element_type = 'contact';
+                        $geolocation->latitude     = $address->lat;
+                        $geolocation->longitude    = $address->lon;
+                        $geolocation->fk_element   = $contactID;
+                        $geolocation->create($user);
                     }
-
                 }
                 break;
             case 'FACTURE_ADD_CONTACT' :
