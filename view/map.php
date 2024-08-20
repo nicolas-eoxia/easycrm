@@ -325,67 +325,12 @@ if ($source != 'pwa') {
 }
 
 $picto = img_picto('location', 'fontawesome_search-location_fas_#007BFF');
-print '<button id="geolocate-button" class="geolocate-button">' . $picto . '</button>';
+print '<div id="geolocate-button" class="geolocate-button">' . $picto . '</div>';
 
 ?>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/css/ol.css" type="text/css">
 	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList"></script>
 	<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/build/ol.js"></script>
-	<style>
-		.ol-popup {
-			position: absolute;
-			background-color: white;
-			-webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-			filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-			padding: 15px;
-			border-radius: 10px;
-			border: 1px solid #cccccc;
-			bottom: 12px;
-			left: -50px;
-			min-width: 280px;
-		}
-		.ol-popup:after, .ol-popup:before {
-			top: 100%;
-			border: solid transparent;
-			content: " ";
-			height: 0;
-			width: 0;
-			position: absolute;
-			pointer-events: none;
-		}
-		.ol-popup:after {
-			border-top-color: white;
-			border-width: 10px;
-			left: 48px;
-			margin-left: -10px;
-		}
-		.ol-popup:before {
-			border-top-color: #cccccc;
-			border-width: 11px;
-			left: 48px;
-			margin-left: -11px;
-		}
-		.ol-popup-closer {
-			text-decoration: none;
-			position: absolute;
-			top: 2px;
-			right: 8px;
-		}
-		.ol-popup-closer:after {
-			content: "✖";
-		}
-        .geolocate-button {
-            position: absolute;
-            bottom: 180px;
-            right: 20px;
-            padding: 10px 10px;
-            border: solid #007BFF;
-            color: white;
-            border-radius: 100px;
-            cursor: pointer;
-            z-index: 1000;
-        }
-    </style>
 
 	<div id="display_map" class="display_map"></div>
 	<div id="popup" class="ol-popup">
