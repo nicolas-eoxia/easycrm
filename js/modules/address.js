@@ -82,7 +82,7 @@ window.easycrm.address.toggleAddressFavorite = function() {
   document.URL.match(/\?/) ? querySeparator = '&' : 1;
 
   $.ajax({
-    url: document.URL + querySeparator + 'action=toggle_favorite&favorite_id=' + addressID + '&token=' + token,
+    url: document.URL + querySeparator + 'action=toggle_favorite&address_id=' + addressID + '&token=' + token,
     type: "POST",
     processData: false,
     contentType: false,

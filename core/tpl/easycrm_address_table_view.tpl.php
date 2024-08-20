@@ -54,32 +54,39 @@ if (is_array($addresses) && !empty($addresses)) {
 
         // Address location
 		print '<td class="minwidth300">';
+        $geolocation->fetch('', '', ' AND fk_element = ' . $element['id']);
+        if ($geolocation->longitude > 0 && $geolocation->latitude > 0) {
+            print img_picto($langs->trans('DataSuccessfullyRetrieved'), 'fontawesome_map-marker-alt_fas_#28a745') . ' ';
+        } else {
+            print img_picto($langs->trans('CouldntFindDataOnOSM'), 'fontawesome_exclamation-triangle_fas_#8c4446') . ' ';
+        }
 		print dol_strlen($contact->address) > 0 ? $contact->address : $langs->trans('N/A');
 		print '</td>';
 
 		// Actions
 		print '<td class="right">';
         if ($permissiontoadd) {
-            print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&action=edit&from_type=' . $objectType . '">';
+            print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&action=edit&from_type=' . $objectType . '"  style="display: inline">';
             print '<input type="hidden" name="token" value="' . newToken() . '">';
-            print '<input type="hidden" name="addressID" value="' . $element['id'] . '">';
+            print '<input type="hidden" name="address_id" value="' . $element['id'] . '">';
             if (!empty($backtopage)) {
                 print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
             }
             print '<button type="submit" class="wpeo-button button-grey"><i class="fas fa-pen"></i></button> ';
+            print '</form>';
         }
 		if ($permissiontodelete) {
-			print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&module_name=' . $moduleName . '&from_type=' . $objectLinked->element . '">';
+			print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&module_name=' . $moduleName . '&from_type=' . $objectLinked->element . '"  style="display: inline">';
 			print '<input type="hidden" name="token" value="' . newToken() . '">';
 			print '<input type="hidden" name="action" value="delete_address">';
-			print '<input type="hidden" name="addressID" value="' . $element['id'] . '">';
+			print '<input type="hidden" name="address_id" value="' . $element['id'] . '">';
 			print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
 			print '<button type="submit" class="wpeo-button button-grey" value="' . $element['id'] . '">';
 			print '<i class="fas fa-trash"></i>';
 			print '</button>';
 			print '</form>';
 		}
-		print '</td>';
+        print '</td>';
 		print '</tr>';
 	}
 } else {

@@ -203,10 +203,10 @@ $allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
 //	}
 //} else {
 $filterSQL  = 't.element_type = ' . "'" . GETPOST('from_type') . "'";
-$filterSQL .= ($fromId > 0 ? ' AND t.fk_element = ' . $fromId : ($filterId > 0 ? ' AND t.fk_element = ' . $filterId : ''));
+$filterSQL .= ($filterId > 0 ? ' AND t.fk_element = ' . $filterId : '');
 
-if ($fromId > 0) {
-    $project->fetch($fromId);
+if ($filterId > 0) {
+    $project->fetch($filterId);
     $contacts = $project->liste_contact();
 } else {
     $contacts = saturne_fetch_all_object_type('contact', '', '', 0, 0, ['customsql' => ' AND code = "PROJECTADDRESS"']);
@@ -214,7 +214,6 @@ if ($fromId > 0) {
 
 if (is_array($contacts) && !empty($contacts)) {
     foreach($contacts as $contactSingle) {
-
         if ($contactSingle['code'] == 'PROJECTADDRESS') {
             $geolocation->fetch('', '', ' AND t.fk_element = ' . $contactSingle['id']);
             if (!empty($geolocation->latitude) && !empty($geolocation->longitude)) {
@@ -227,7 +226,7 @@ if (is_array($contacts) && !empty($contacts)) {
 if (is_array($geolocations) && !empty($geolocations)) {
     foreach($geolocations as $geolocation) {
         $geolocation->convertCoordinates();
-        $objectLinked->fetch($fromId);
+        $objectLinked->fetch($filterId);
 
         if ($objectLinked->entity != $conf->entity || ($source == 'pwa' && empty($objectLinked->opp_status))) {
             continue;
@@ -279,8 +278,8 @@ if (is_array($geolocations) && !empty($geolocations)) {
     }
 }
 
-if ($fromId > 0) {
-    $objectLinked->fetch($fromId);
+if ($filterId > 0) {
+    $objectLinked->fetch($filterId);
 
     saturne_get_fiche_head($objectLinked, 'map', $title);
 

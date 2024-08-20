@@ -54,6 +54,7 @@ $addressAddress = GETPOST('addressDetail');
 
 // Get parameters
 $fromId      = GETPOST('from_id', 'int');
+$addressID   = GETPOST('address_id', 'int');
 $objectType  = GETPOST('from_type', 'alpha');
 $ref         = GETPOST('ref', 'alpha');
 $action      = GETPOST('action', 'aZ09');
@@ -122,22 +123,48 @@ if (empty($reshook)) {
 		}
 	}
 
+    if ($action == 'edit_address' && $permissiontoadd && !$cancel) {
+        if ($addressID > 0) {
+            $contact->fetch($addressID);
+            $contact->lastname = $addressName;
+            $contact->address  = $addressAddress;
+            $contact->update($addressID, $user);
+
+            $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
+            $data = $geolocation->getDataFromOSM($contact);
+            if (!empty($data)) {
+                $address = $data[0];
+
+                if (empty($geolocation->id)) {
+                    $geolocation->element_type = 'contact';
+                    $geolocation->latitude     = $address->lat;
+                    $geolocation->longitude    = $address->lon;
+                    $geolocation->fk_element   = $addressID;
+                    $geolocation->create($user);
+                } else {
+                    $geolocation->latitude  = $address->lat;
+                    $geolocation->longitude = $address->lon;
+                    $geolocation->update($user);
+                }
+                setEventMessages($langs->trans('AddressUpdated'), []);
+            } else {
+                setEventMessages($langs->trans('ErrorUpdateAddress'), [], 'errors');
+            }
+        }
+    }
+
 	// Action to delete address
 	if ($action == 'delete_address' && $permissiontodelete) {
-		$addressID = GETPOST('addressID');
-
 		if ($addressID > 0) {
 			$contact->fetch($addressID);
-
 			$result = $contact->delete($user);
 
 			if ($result > 0) {
                 $objectLinked->fetch($fromId);
-                if ($objectLinked->array_options['options_projectaddress'] == $addressID) {
-                    $objectLinked->array_options['options_projectaddress'] = 0;
-                    $objectLinked->updateExtrafield('projectaddress');
+                if ($objectLinked->array_options['options_' . $objectType . 'address'] == $addressID) {
+                    $objectLinked->array_options['options_' . $objectType . 'address'] = 0;
+                    $objectLinked->updateExtrafield($objectType . 'address');
                 }
-
                 $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
                 $geolocation->delete($user, false, false);
 
@@ -149,38 +176,8 @@ if (empty($reshook)) {
 		}
 	}
 
-    if ($action == 'edit_address' && $permissiontoadd && !$cancel) {
-        $addressID = GETPOST('addressID');
-
-        if ($addressID > 0) {
-            $contact->fetch($addressID);
-            $contact->lastname = $addressName;
-            $contact->address  = $addressAddress;
-            $contact->update($addressID, $user);
-
-            $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
-            $data = $geolocation->getDataFromOSM($contact);
-            if (is_array($data) && !empty($data)) {
-                $address = $data[0];
-
-                if (empty($geolocation->id)) {
-                    $geolocation->element_type = 'contact';
-                    $geolocation->latitude   = $address->lat;
-                    $geolocation->longitude  = $address->lon;
-                    $geolocation->fk_element = $addressID;
-                    $geolocation->create($user);
-                } else {
-                    $geolocation->latitude  = $address->lat;
-                    $geolocation->longitude = $address->lon;
-                    $geolocation->update($user);
-                }
-            }
-            setEventMessages($langs->trans('AddressUpdated'), []);
-        }
-    }
-
     if ($action == 'toggle_favorite') {
-        $favoriteAddressId = GETPOST('favorite_id');
+        $favoriteAddressId = GETPOST('address_id');
 
         $objectLinked->fetch($fromId);
         if (!empty($objectLinked) && $favoriteAddressId > 0) {
@@ -235,9 +232,6 @@ if ($action == 'create' && $fromId > 0) {
     print $form->buttonsSaveCancel('Create', 'Cancel', [], false, 'wpeo-button');
 } else if ($action == 'edit' && $fromId > 0) {
     $objectLinked->fetch($fromId);
-    $addressID = GETPOST('addressID');
-
-    $contact = new Contact($db);
     $contact->fetch($addressID);
 
     saturne_get_fiche_head($objectLinked, 'address', $title);
@@ -249,7 +243,7 @@ if ($action == 'create' && $fromId > 0) {
     print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType . '">';
     print '<input type="hidden" name="token" value="'.newToken().'">';
     print '<input type="hidden" name="action" value="edit_address">';
-    print '<input type="hidden" name="addressID" value="' . $addressID . '">';
+    print '<input type="hidden" name="address_id" value="' . $addressID . '">';
     if ($backtopage) {
         print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
     }

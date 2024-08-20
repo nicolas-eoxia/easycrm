@@ -197,11 +197,11 @@ class Geolocation extends SaturneObject
      * Get data from OpenStreetMap API with an address
      *
      * @param  Object $contact Object contact/address to get the geolocation from
-     * @return array
+     * @return array           Empty array if KO, filled if OK
      */
     public function getDataFromOSM($contact): array
     {
-        global $user;
+        global $langs, $user;
 
         $parameters = (dol_strlen($contact->address) > 0 ? $contact->address : '');
         $parameters = dol_sanitizeFileName($parameters);
@@ -229,6 +229,7 @@ class Geolocation extends SaturneObject
 
             return $data;
         } else {
+            $this->errors[] = $langs->trans('CouldntFindDataOnOSM');
             return [];
         }
     }
