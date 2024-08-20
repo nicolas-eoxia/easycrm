@@ -292,12 +292,12 @@ class ActionsEasycrm
      */
     public function printCommonFooter(array $parameters): int
     {
-        global $conf, $db, $langs, $module, $object, $user;
+        global $conf, $db, $langs, $object, $user;
 
         // Do something only for the current context
         if (preg_match('/thirdpartycomm|projectcard/', $parameters['context'])) {
-            $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
-            $pictoMod  = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+            $pictoPath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
+            $pictoMod  = img_picto('', $pictoPath, '', 1, 0, 0, '', 'pictoModule');
 
             if (isModEnabled('agenda')) {
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
@@ -347,11 +347,11 @@ class ActionsEasycrm
 
             $contact = new Contact($db);
             $contact->fetch($object->array_options['options_projectaddress']);
-            $address = img_picto('contact', 'contact') . ' ' . $contact->lastname;
+            $pictoContact = img_picto('contact', 'contact') . ' ' . $contact->lastname;
 
             $outAddress = '<td>';
             if ($contact->id > 0) {
-                $outAddress .= dolButtonToOpenUrlInDialogPopup('address' . $object->id, $langs->transnoentities('FavoriteAddress'), $address, '/contact/card.php?id='. $contact->id);
+                $outAddress .= dolButtonToOpenUrlInDialogPopup('address' . $object->id, $langs->transnoentities('FavoriteAddress'), $pictoContact, '/contact/card.php?id='. $contact->id);
             }
             $outAddress .= '</td></tr>';
             ?>

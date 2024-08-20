@@ -136,7 +136,7 @@ $townFilter    = (dol_strlen($filterTown) > 0 ? 'town = "' . $filterTown . '" AN
 $countryFilter = ($filterCountry > 0 ? 'fk_country = ' . $filterCountry . ' AND ' : '');
 $regionFilter  = ($filterRegion > 0 ? 'fk_region = ' . $filterRegion . ' AND ' : '');
 $stateFilter   = ($filterState > 0 ? 'fk_department = ' . $filterState . ' AND ' : '');
-//ZIP
+// @TODO zip filter
 
 $allCat = '';
 foreach($filterCat as $catId) {

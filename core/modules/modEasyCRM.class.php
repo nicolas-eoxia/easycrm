@@ -600,12 +600,12 @@ class modEasyCRM extends DolibarrModules
                     $contact->fk_pays    = $address->fk_country;
                     $contact->zip        = $address->zip;
                     $contact->town       = $address->town;
-                    $addressID           = $contact->create($user);
+                    $contactID           = $contact->create($user);
 
                     $geolocation->element_type = 'contact';
                     $geolocation->latitude     = $address->latitude;
                     $geolocation->longitude    = $address->longitude;
-                    $geolocation->fk_element   = $addressID;
+                    $geolocation->fk_element   = $contactID;
                     $geolocation->create($user);
                 }
             }

@@ -68,7 +68,7 @@ if (is_array($addresses) && !empty($addresses)) {
         if ($permissiontoadd) {
             print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&action=edit&from_type=' . $objectType . '"  style="display: inline">';
             print '<input type="hidden" name="token" value="' . newToken() . '">';
-            print '<input type="hidden" name="address_id" value="' . $element['id'] . '">';
+            print '<input type="hidden" name="contact_id" value="' . $element['id'] . '">';
             if (!empty($backtopage)) {
                 print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
             }
@@ -79,7 +79,7 @@ if (is_array($addresses) && !empty($addresses)) {
 			print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&module_name=' . $moduleName . '&from_type=' . $objectLinked->element . '"  style="display: inline">';
 			print '<input type="hidden" name="token" value="' . newToken() . '">';
 			print '<input type="hidden" name="action" value="delete_address">';
-			print '<input type="hidden" name="address_id" value="' . $element['id'] . '">';
+			print '<input type="hidden" name="contact_id" value="' . $element['id'] . '">';
 			print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
 			print '<button type="submit" class="wpeo-button button-grey" value="' . $element['id'] . '">';
 			print '<i class="fas fa-trash"></i>';

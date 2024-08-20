@@ -119,11 +119,11 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                 $contact->fetch($contactID);
 
                 if (dol_strlen($contact->address) > 0) {
-                    $geolocation = new Geolocation($this->db);
-                    $data        = $geolocation->getDataFromOSM($contact);
+                    $geolocation   = new Geolocation($this->db);
+                    $addressesList = $geolocation->getDataFromOSM($contact);
 
-                    if (is_array($data) && !empty($data)) {
-                        $address = $data[0];
+                    if (!empty($addressesList)) {
+                        $address = $addressesList[0];
 
                         $geolocation->element_type = 'contact';
                         $geolocation->latitude     = $address->lat;

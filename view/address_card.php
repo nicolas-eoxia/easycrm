@@ -48,12 +48,12 @@ global $conf, $db, $hookmanager, $langs, $user;
 saturne_load_langs();
 
 // Get create parameters
-$addressName    = GETPOST('name');
-$addressAddress = GETPOST('address_detail');
+$contactName    = GETPOST('name');
+$contactAddress = GETPOST('address_detail');
 
 // Get parameters
 $fromId      = GETPOST('from_id', 'int');
-$addressID   = GETPOST('address_id', 'int');
+$contactID   = GETPOST('contact_id', 'int');
 $objectType  = GETPOST('from_type', 'alpha');
 $ref         = GETPOST('ref', 'alpha');
 $action      = GETPOST('action', 'aZ09');
@@ -101,19 +101,19 @@ if (empty($reshook)) {
 
 	// Action to add address
 	if ($action == 'add_address' && $permissiontoadd && !$cancel) {
-		if (empty($addressName) || empty($addressAddress)) {
+		if (empty($contactName) || empty($contactAddress)) {
 			setEventMessages($langs->trans('EmptyValue'), [], 'errors');
-			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '&name=' . $addressName . '&address=' . $addressAddress);
+			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '&name=' . $contactName . '&address=' . $contactAddress);
 			exit;
 		} else {
-            $contact->lastname   = $addressName;
-            $contact->address    = $addressAddress;
+            $contact->lastname   = $contactName;
+            $contact->address    = $contactAddress;
             $contact->fk_project = $fromId;
-            $addressID           = $contact->create($user);
+            $contactID           = $contact->create($user);
 
-            $project->add_contact($addressID, 'PROJECTADDRESS');
+            $project->add_contact($contactID, 'PROJECTADDRESS');
 
-			if ($addressID > 0) {
+			if ($contactID > 0) {
 				setEventMessages($langs->trans('AddressCreated'), []);
 			} else {
 				setEventMessages($langs->trans('ErrorCreateAddress'), [], 'errors');
@@ -123,26 +123,24 @@ if (empty($reshook)) {
 	}
 
     if ($action == 'edit_address' && $permissiontoadd && !$cancel) {
-        if ($addressID > 0) {
-            $contact->fetch($addressID);
-            $contact->lastname = $addressName;
-            $contact->address  = $addressAddress;
-            $contact->update($addressID, $user);
+        if ($contactID > 0) {
+            $contact->fetch($contactID);
+            $contact->lastname = $contactName;
+            $contact->address  = $contactAddress;
+            $contact->update($contactID, $user);
 
-            $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
-            $data = $geolocation->getDataFromOSM($contact);
-            if (!empty($data)) {
-                $address = $data[0];
+            $geolocation->fetch('', '', ' AND fk_element = ' . $contactID);
+            $addressesList = $geolocation->getDataFromOSM($contact);
+            if (!empty($addressesList)) {
+                $address = $addressesList[0];
 
+                $geolocation->latitude  = $address->lat;
+                $geolocation->longitude = $address->lon;
                 if (empty($geolocation->id)) {
                     $geolocation->element_type = 'contact';
-                    $geolocation->latitude     = $address->lat;
-                    $geolocation->longitude    = $address->lon;
-                    $geolocation->fk_element   = $addressID;
+                    $geolocation->fk_element   = $contactID;
                     $geolocation->create($user);
                 } else {
-                    $geolocation->latitude  = $address->lat;
-                    $geolocation->longitude = $address->lon;
                     $geolocation->update($user);
                 }
                 setEventMessages($langs->trans('AddressUpdated'), []);
@@ -154,17 +152,17 @@ if (empty($reshook)) {
 
 	// Action to delete address
 	if ($action == 'delete_address' && $permissiontodelete) {
-		if ($addressID > 0) {
-			$contact->fetch($addressID);
+		if ($contactID > 0) {
+			$contact->fetch($contactID);
 			$result = $contact->delete($user);
 
 			if ($result > 0) {
                 $objectLinked->fetch($fromId);
-                if ($objectLinked->array_options['options_' . $objectType . 'address'] == $addressID) {
+                if ($objectLinked->array_options['options_' . $objectType . 'address'] == $contactID) {
                     $objectLinked->array_options['options_' . $objectType . 'address'] = 0;
                     $objectLinked->updateExtrafield($objectType . 'address');
                 }
-                $geolocation->fetch('', '', ' AND fk_element = ' . $addressID);
+                $geolocation->fetch('', '', ' AND fk_element = ' . $contactID);
                 $geolocation->delete($user, false, false);
 
                 setEventMessages($langs->trans('AddressDeleted'), []);
@@ -176,11 +174,9 @@ if (empty($reshook)) {
 	}
 
     if ($action == 'toggle_favorite') {
-        $favoriteAddressId = GETPOST('address_id');
-
         $objectLinked->fetch($fromId);
-        if (!empty($objectLinked) && $favoriteAddressId > 0) {
-            $objectLinked->array_options['options_' . $objectType . 'address'] = $objectLinked->array_options['options_' . $objectType . 'address'] == $favoriteAddressId ? 0 : $favoriteAddressId;
+        if (!empty($objectLinked) && $contactID > 0) {
+            $objectLinked->array_options['options_' . $objectType . 'address'] = $objectLinked->array_options['options_' . $objectType . 'address'] == $contactID ? 0 : $contactID;
             $objectLinked->update($user);
         }
     }
@@ -215,7 +211,7 @@ if ($action == 'create' && $fromId > 0) {
 
 	// Name -- Nom
 	print '<tr><td class="fieldrequired">' . $langs->trans('Name') . '</td><td>';
-	print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="name" id="name" value="' . $addressName . '">';
+	print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="name" id="name" value="' . $contactName . '">';
 	print '</td></tr>';
 
     // Address -- Adresse
@@ -231,7 +227,7 @@ if ($action == 'create' && $fromId > 0) {
     print $form->buttonsSaveCancel('Create', 'Cancel', [], false, 'wpeo-button');
 } else if ($action == 'edit' && $fromId > 0) {
     $objectLinked->fetch($fromId);
-    $contact->fetch($addressID);
+    $contact->fetch($contactID);
 
     saturne_get_fiche_head($objectLinked, 'address', $title);
 
@@ -242,7 +238,7 @@ if ($action == 'create' && $fromId > 0) {
     print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType . '">';
     print '<input type="hidden" name="token" value="'.newToken().'">';
     print '<input type="hidden" name="action" value="edit_address">';
-    print '<input type="hidden" name="address_id" value="' . $addressID . '">';
+    print '<input type="hidden" name="contact_id" value="' . $contactID . '">';
     if ($backtopage) {
         print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
     }
@@ -271,19 +267,19 @@ if ($action == 'create' && $fromId > 0) {
     saturne_get_fiche_head($objectLinked, 'address', $title);
 
     $morehtml = '<a href="' . dol_buildpath('/' . $objectLinked->element . '/list.php', 1) . '?restore_lastsearch_values=1&from_type=' . $objectLinked->element . '">' . $langs->trans('BackToList') . '</a>';
-	saturne_banner_tab($objectLinked, 'ref', $morehtml, 1, 'ref', 'ref', '', !empty($objectLinked->photo));
+    saturne_banner_tab($objectLinked, 'ref', $morehtml, 1, 'ref', 'ref', '', !empty($objectLinked->photo));
 
-	$objectLinked->fetch_optionals();
+    $objectLinked->fetch_optionals();
 
-	print '<div class="fichecenter">';
+    print '<div class="fichecenter">';
 
-	print '<div class="addresses-container">';
+    print '<div class="addresses-container">';
 
-	$parameters = ['address' => $contact];
-	$reshook    = $hookmanager->executeHooks('easycrmAddressType', $parameters, $objectLinked); // Note that $action and $objectLinked may have been modified by some hooks
-	if ($reshook > 0) {
+    $parameters = ['contact' => $contact];
+    $reshook    = $hookmanager->executeHooks('easycrmAddressType', $parameters, $objectLinked); // Note that $action and $objectLinked may have been modified by some hooks
+    if ($reshook > 0) {
         $addresses = $hookmanager->resArray;
-	} else {
+    } else {
         $contacts = $project->liste_contact();
         if (is_array($contacts) && !empty($contacts)) {
             foreach($contacts as $contactSingle) {
