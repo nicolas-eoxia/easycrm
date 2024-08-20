@@ -209,14 +209,19 @@ if ($filterId > 0) {
     $project->fetch($filterId);
     $contacts = $project->liste_contact();
 } else {
-    $contacts = saturne_fetch_all_object_type('contact', '', '', 0, 0, ['customsql' => ' AND code = "PROJECTADDRESS"']);
+    $contacts = saturne_fetch_all_object_type('contact', '', '', 0, 0, ['customsql' => 'ct.code = "PROJECTADDRESS"'], 'AND', 0, 0, 0, ' LEFT JOIN ' . MAIN_DB_PREFIX . 'element_contact as ec ON t.rowid = ec.fk_socpeople LEFT JOIN ' . MAIN_DB_PREFIX . 'c_type_contact as ct ON ec.fk_c_type_contact = ct.rowid');
 }
 
 if (is_array($contacts) && !empty($contacts)) {
     foreach($contacts as $contactSingle) {
-        if ($contactSingle['code'] == 'PROJECTADDRESS') {
+        if (is_object($contactSingle)) {
+            $geolocation->fetch('', '', ' AND t.fk_element = ' . $contactSingle->id);
+            if ($geolocation->latitude > 0 && $geolocation->longitude > 0) {
+                $geolocations[] = clone $geolocation;
+            }
+        } else if (is_array($contactSingle) && $contactSingle['code'] == 'PROJECTADDRESS') {
             $geolocation->fetch('', '', ' AND t.fk_element = ' . $contactSingle['id']);
-            if (!empty($geolocation->latitude) && !empty($geolocation->longitude)) {
+            if ($geolocation->latitude > 0 && $geolocation->longitude >0) {
                 $geolocations[] = clone $geolocation;
             }
         }
@@ -228,7 +233,7 @@ if (is_array($geolocations) && !empty($geolocations)) {
         $geolocation->convertCoordinates();
         $objectLinked->fetch($filterId);
 
-        if ($objectLinked->entity != $conf->entity || ($source == 'pwa' && empty($objectLinked->opp_status))) {
+        if ((!empty($filterId) && $objectLinked->entity != $conf->entity) || ($source == 'pwa' && empty($objectLinked->opp_status))) {
             continue;
         }
 
