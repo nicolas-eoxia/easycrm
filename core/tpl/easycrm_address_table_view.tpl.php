@@ -92,7 +92,7 @@ if (is_array($addresses) && !empty($addresses)) {
 		print '</tr>';
 	}
 } else {
-	print '<tr><td colspan="2">';
+	print '<tr><td colspan="4">';
 	print '<div class="opacitymedium">' . $langs->trans('NoAddresses') . '</div><br>';
 	print '</td></tr>';
 }

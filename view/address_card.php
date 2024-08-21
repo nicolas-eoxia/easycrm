@@ -54,7 +54,7 @@ $contactAddress = GETPOST('address_detail');
 // Get parameters
 $fromId      = GETPOST('from_id', 'int');
 $contactID   = GETPOST('contact_id', 'int');
-$objectType  = GETPOST('from_type', 'alpha');
+$objectType  = GETPOSTISSET('from_type') ? GETPOST('from_type', 'alpha') : GETPOST('object_type', 'alpha');
 $ref         = GETPOST('ref', 'alpha');
 $action      = GETPOST('action', 'aZ09');
 $contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : $objectType . 'address'; // To manage different context of search
@@ -75,7 +75,8 @@ $formcompany = new FormCompany($db);
 
 $hookmanager->initHooks([$objectType . 'address', $objectType . 'address', 'easycrmglobal', 'globalcard']); // Note that conf->hooks_modules contains array
 
-$project->fetch($fromId);
+$project->fetch($fromId ?? 0, $fromId > 0 ? '' : $ref);
+$fromId = ($fromId > 0 ? $fromId : $project->id);
 
 // Security check - Protection if external user
 $permissiontoread   = $user->rights->easycrm->address->read;
@@ -112,10 +113,11 @@ if (empty($reshook)) {
             $contact->fk_project = $fromId;
 
             $contactID = $contact->create($user);
+            $_POST['contactid'] = $contactID;
 
-			if ($contactID > 0) {
+            if ($contactID > 0) {
                 $project->add_contact($contactID, 'PROJECTADDRESS');
-                setEventMessages($langs->trans('AddressCreated'), []);
+                setEventMessages($langs->trans('ObjectCreated', $langs->trans('Address')), []);
 			} else {
 				setEventMessages($langs->trans('ErrorCreateAddress'), [], 'errors');
 			}
@@ -145,7 +147,7 @@ if (empty($reshook)) {
                 } else {
                     $geolocation->update($user);
                 }
-                setEventMessages($langs->trans('AddressUpdated'), []);
+                setEventMessages($langs->trans('ObjectModified', $langs->trans('Address')), []);
             } else {
                 setEventMessages($langs->trans('ErrorUpdateAddress'), [], 'errors');
             }
@@ -169,7 +171,7 @@ if (empty($reshook)) {
                 $geolocation->fetch('', '', ' AND fk_element = ' . $contactID);
                 $geolocation->delete($user, false, false);
 
-                setEventMessages($langs->trans('AddressDeleted'), []);
+                setEventMessages($langs->trans('ObjectDeleted', $langs->trans('Address')), []);
 			} else {
 				setEventMessages($langs->trans('ErrorDeleteAddress'), [], 'errors');
 			}
@@ -297,12 +299,7 @@ if ($action == 'create' && $fromId > 0) {
 
     print load_fiche_titre($langs->trans('AddressesList'), '', $contact->picto);
 
-    $alreadyAddedAddress = [];
-	if (is_array($addresses) && !empty($addresses)) {
-        require __DIR__ . '/../core/tpl/easycrm_address_table_view.tpl.php';
-	} else {
-		print '<div class="opacitymedium">' . $langs->trans('NoAddresses') . '</div>';
-	}
+    require __DIR__ . '/../core/tpl/easycrm_address_table_view.tpl.php';
 
 	print '</div>';
 
