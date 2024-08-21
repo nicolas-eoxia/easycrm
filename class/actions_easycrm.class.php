@@ -503,7 +503,7 @@ class ActionsEasycrm
      */
     public function printFieldListValue(array $parameters): int
     {
-        global $conf, $db, $langs, $object, $user;
+        global $conf, $db, $formproject, $langs, $object, $user;
 
         // Do something only for the current context
         if (strpos($parameters['context'], 'projectlist') !== false) {
@@ -573,6 +573,7 @@ class ActionsEasycrm
                             $task->fetch($parameters['obj']->options_commtask);
                             $out2 .= $task->getNomUrl(1, '', 'task', 1);
                         }
+<<<<<<< Updated upstream
                         $out2 .= '</td>';
 
                         // projectField opp_percent
@@ -592,11 +593,38 @@ class ActionsEasycrm
                             $out3 .= dolGetBadge($parameters['obj']->opp_percent . ' %', '', 'status' . $statusBadge);
                         }
                         $out3 .= '</span></td>';
+=======
+
+                        switch ($parameters['obj']->opp_percent) {
+                            case $parameters['obj']->opp_percent < 20:
+                                $statusBadge = 8;
+                                break;
+                            case $parameters['obj']->opp_percent < 60:
+                                $statusBadge = 1;
+                                break;
+                            default:
+                                $statusBadge = 4;
+                                break;
+                        }
+                        $out2 = dolGetBadge($parameters['obj']->opp_percent . ' %', '', 'status' . $statusBadge);
+
+                        $out3  = '<td class="center">';
+                        if ($action == 'edit_test') {
+                            $out3 .= $formproject->selectOpportunityStatus('opp_status' . $parameters['obj']->id, $parameters['obj']->opp_status, 1, 0, 0, 0, '', 1, 1);
+                        } else {
+                            $code = dol_getIdFromCode($db, $parameters['obj']->opp_status, 'c_lead_status', 'rowid', 'code');
+                            if ($code) {
+                                $out3 .= $code;
+                            }
+                        }
+                        $out3 .= '</td>';
+>>>>>>> Stashed changes
                     } ?>
                     <script>
                         var outJS  = <?php echo json_encode($out); ?>;
                         var outJS2 = <?php echo json_encode($out2); ?>;
                         var outJS3 = <?php echo json_encode($out3); ?>;
+<<<<<<< Updated upstream
 
                         var commRelauchCell = $('.liste > tbody > tr.oddeven').find('td[data-key="projet.commrelaunch"]').last();
                         var commTaskCell    = $('.liste > tbody > tr.oddeven').find('td[data-key="projet.commtask"]').last();
@@ -605,6 +633,17 @@ class ActionsEasycrm
                         commRelauchCell.replaceWith(outJS);
                         commTaskCell.replaceWith(outJS2);
                         probCell.replaceWith(outJS3);
+=======
+                        var celluleCible = $('td[data-key="projet.commrelaunch"]');
+                        var commRelauchCell = $('.liste > tbody > tr.oddeven').find('td[data-key="projet.commrelaunch"]').last();
+                        var test = celluleCible.prev();
+                        test.html(outJS2);
+                        commRelauchCell.addClass('minwidth300');
+                        commRelauchCell.append(outJS);
+
+                        var test2 = celluleCible.prevAll().eq(2);
+                        test2.replaceWith(outJS3);
+>>>>>>> Stashed changes
 
                     </script>
                     <?php
