@@ -132,6 +132,7 @@ class modEasyCRM extends DolibarrModules
                 'thirdpartylist',
                 'main',
                 'pwaadmin'
+                'notification'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,

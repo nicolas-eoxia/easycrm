@@ -861,4 +861,30 @@ class ActionsEasycrm
 
         return 0; // or return 1 to replace standard code
     }
+
+    /**
+     * Overloading the formatNotificationMessage function : replacing the parent's function with the one below
+     *
+     * @param  array  $parameters Hook metadatas (context, etc...)
+     * @param  Object $object     Current object
+     * @param  string $action     Current action
+     * @return int                0 < on error, 0 on success, 1 to replace standard code
+     */
+    public function formatNotificationMessage(array $parameters, object $object, string $action): int
+    {
+        global $conf;
+
+        if ($parameters['notifcode'] == 'BILL_VALIDATE') {
+            $object->fetch($object->id);
+            $object->generateDocument($object->modelpdf, $parameters['outputlangs']);
+            $fileInfo                   = dol_dir_list($conf->facture->multidir_output[$conf->entity] . '/' . $object->ref);
+            $files['files']['file']     = $fileInfo[0]['fullname'];
+            $files['files']['mimefile'] = mime_content_type($fileInfo[0]['fullname']);
+            $files['files']['filename'] = $fileInfo[0]['name'];
+
+            $this->results = $files;
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
 }
