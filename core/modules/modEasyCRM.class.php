@@ -223,7 +223,7 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_PWA_CLOSE_PROJECT_WHEN_OPPORTUNITY_ZERO', 'integer', 0, '', 0, 'current'],
 
 			// CONST ADDRESS
-			$i++ => ['EASYCRM_DISPLAY_MAIN_ADDRESS', 'integer', 0, '', 0, 'current'],
+			//$i++ => ['EASYCRM_DISPLAY_MAIN_ADDRESS', 'integer', 0, '', 0, 'current'],
             $i++ => ['EASYCRM_ADDRESS_ADDON', 'chaine', 'mod_address_standard', '', 0, 'current'],
 
             // CONST MODULE
@@ -580,6 +580,39 @@ class modEasyCRM extends DolibarrModules
             $categoryID      = $category->create($user);
 
             dolibarr_set_const($this->db, 'EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG', $categoryID, 'integer', 0, '', $conf->entity);
+        }
+        if (empty(getDolGlobalInt('EASYCRM_ADDRESS_BACKWARD_COMPATIBILITY'))) {
+            require_once DOL_DOCUMENT_ROOT . '/contact/class/contact.class.php';
+            require_once __DIR__ . '/../../class/geolocation.class.php';
+            require_once __DIR__ . '/../../class/address.class.php';
+
+            $contact     = new Contact($this->db);
+            $address     = new Address($this->db);
+            $geolocation = new Geolocation($this->db);
+
+            $addresses = $address->fetchAll('', '', 0, 0, ['customsql' => ' status > 0 AND latitude > 0 AND longitude > 0']);
+
+            if (is_array($addresses) && !empty($addresses)) {
+                foreach ($addresses as $address) {
+                    $contact->lastname   = $address->name;
+                    $contact->address    = $address->address;
+                    $contact->fk_project = $address->element_id;
+                    $contact->fk_pays    = $address->fk_country;
+                    $contact->zip        = $address->zip;
+                    $contact->town       = $address->town;
+
+                    $contactID = $contact->create($user);
+
+                    $geolocation->element_type = 'contact';
+                    $geolocation->latitude     = $address->latitude;
+                    $geolocation->longitude    = $address->longitude;
+                    $geolocation->fk_element   = $contactID;
+
+                    $geolocation->create($user);
+                }
+            }
+
+            dolibarr_set_const($this->db, 'EASYCRM_ADDRESS_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
         }
 
 		// Permissions

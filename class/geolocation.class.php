@@ -103,7 +103,6 @@ class Geolocation extends SaturneObject
         'longitude'    => ['type' => 'double(24,8)', 'label' => 'Longitude',   'enabled' => 1, 'position' => 20, 'notnull' => 1, 'visible' => 0, 'default' => 0],
         'element_type' => ['type' => 'varchar(255)', 'label' => 'ElementType', 'enabled' => 1, 'position' => 30, 'notnull' => 1, 'visible' => 0],
         'fk_element'   => ['type' => 'integer',      'label' => 'FkElement',   'enabled' => 1, 'position' => 40, 'notnull' => 1, 'visible' => 0, 'index' => 1],
-        'fk_address'   => ['type' => 'integer',      'label' => 'FkAddress',   'enabled' => 1, 'position' => 50, 'notnull' => 0, 'visible' => 0, 'index' => 1],
     ];
 
     /**
@@ -130,11 +129,6 @@ class Geolocation extends SaturneObject
      * @var int Fk_element
      */
     public $fk_element;
-
-    /**
-     * @var int|null Fk_element
-     */
-    public ?int $fk_address;
 
     /**
      * Constructor
@@ -197,5 +191,46 @@ class Geolocation extends SaturneObject
         }
 
         return $error > 0 ? -1 : 0;
+    }
+
+    /**
+     * Get data from OpenStreetMap API with an address
+     *
+     * @param  Object $contact Object contact/address to get the geolocation from
+     * @return array           Empty array if KO, filled if OK
+     */
+    public function getDataFromOSM($contact): array
+    {
+        global $langs, $user;
+
+        $parameters = (dol_strlen($contact->address) > 0 ? $contact->address : '');
+        $parameters = dol_sanitizeFileName($parameters);
+        $parameters = str_replace(' ', '+', $parameters);
+
+        $context  = stream_context_create(["http" => ["header" => "Referer:" . $_SERVER['HTTP_REFERER']]]);
+        $response = file_get_contents('https://nominatim.openstreetmap.org/search?q='. $parameters .'&format=json&polygon=1&addressdetails=1', false, $context);
+        $data     = json_decode($response, false);
+
+        if (is_array($data) && !empty($data)) {
+            $address = $data[0];
+            if (!empty($address->address->postcode)) {
+                $contact->zip = strval($address->address->postcode);
+            }
+            if (!empty($address->address->city)) {
+                $contact->town = $address->address->city;
+            }
+            if (!empty($address->address->country_code)) {
+                $countryID = getCountry(dol_strtoupper($address->address->country_code),3);
+                if ($countryID > 0) {
+                    $contact->country_id = $countryID;
+                }
+            }
+            $contact->update($contact->id, $user);
+
+            return $data;
+        } else {
+            $this->errors[] = $langs->trans('CouldntFindDataOnOSM');
+            return [];
+        }
     }
 }

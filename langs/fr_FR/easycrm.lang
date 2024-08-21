@@ -112,8 +112,10 @@ AllContactHaveNotification           = Tous les tiers ont des notifications cont
 Addresses                    = Adresses
 AddAnAddress                 = Ajouter une adresse
 AddressCreated               = Adresse créée
+AddressUpdated               = Adresse modifée
 AddressDeleted               = Adresse supprimée
 ErrorCreateAddress           = Une erreur est survenue lors de la création de l'adresse
+ErrorCreateAddress           = Une erreur est survenue lors de la mise à jour de l'adresse
 ErrorDeleteAddress           = Une erreur est survenue lors de la suppression de l'adresse
 CouldntFindDataOnOSM         = L'adresse n'a pas été trouvée sur OpenStreetMap
 DataSuccessfullyRetrieved    = Les données de l'adresse ont été récupérées avec succès
@@ -121,6 +123,7 @@ NoAddresses                  = Aucune adresse
 Map                          = Carte
 FavoriteAddress              = Adresse favorite
 NewAddress                   = Nouvelle adresse
+EditAddress                  = Modifier l'adresse
 AddressType                  = Type d'adresse
 Workplace                    = Lieu de travail
 PrincipalResidence           = Résidence principale
@@ -133,7 +136,7 @@ Headquarters                 = Siège social
 DisplayAllAddress            = Afficher une seule adresse par objet
 DisplayAllAddressDescription = Afficher l'adresse principale sur la carte au lieu de toutes les adresses liées à l'objet
 AddressesList                = Liste des adresses
-
+ProjectAddress               = Adresse du projet
 
 
 #

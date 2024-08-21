@@ -64,10 +64,11 @@ $filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
 $source        = GETPOSTISSET('source') ? GETPOST('source') : '';
 
 // Initialize technical object
-$objectInfos    = saturne_get_objects_metadata($objectType);
-$className      = $objectInfos['class_name'];
-$objectLinked   = new $className($db);
-$geolocation    = new Geolocation($db);
+$objectInfos  = saturne_get_objects_metadata($objectType);
+$className    = $objectInfos['class_name'];
+$objectLinked = new $className($db);
+$geolocation  = new Geolocation($db);
+$project      = new Project($db);
 
 // Initialize view objects
 $form        = new Form($db);
@@ -131,11 +132,11 @@ saturne_header(0, '', $title, $helpUrl);
 // Filter on address
 $filterId      = $fromId > 0 ? $fromId : $filterId;
 $IdFilter      = ($filterId > 0 ? 'element_id = "' . $filterId . '" AND ' : '');
-$typeFilter    = (dol_strlen($filterType) > 0 ? 'type = "' . $filterType . '" AND ' : '');
 $townFilter    = (dol_strlen($filterTown) > 0 ? 'town = "' . $filterTown . '" AND ' : '');
 $countryFilter = ($filterCountry > 0 ? 'fk_country = ' . $filterCountry . ' AND ' : '');
 $regionFilter  = ($filterRegion > 0 ? 'fk_region = ' . $filterRegion . ' AND ' : '');
 $stateFilter   = ($filterState > 0 ? 'fk_department = ' . $filterState . ' AND ' : '');
+// @TODO zip filter
 
 $allCat = '';
 foreach($filterCat as $catId) {
@@ -144,7 +145,7 @@ foreach($filterCat as $catId) {
 $allCat        = rtrim($allCat, ',');
 $catFilter     = (dol_strlen($allCat) > 0 ? 'cp.fk_categorie IN (' . $allCat . ') AND ' : '');
 
-$filter        = ['customsql' => $IdFilter . $typeFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . $catFilter . 'element_type = "'. $objectType .'" AND status >= 0'];
+$filter        = ['customsql' => $IdFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . $catFilter . 'element_type = "'. $objectType .'" AND status >= 0'];
 
 $icon          = dol_buildpath('/easycrm/img/dot.png', 1);
 $objectList    = [];
@@ -202,15 +203,34 @@ $allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
 //	}
 //} else {
 $filterSQL  = 't.element_type = ' . "'" . GETPOST('from_type') . "'";
-$filterSQL .= ($fromId > 0 ? ' AND t.fk_element = ' . $fromId : ($filterId > 0 ? ' AND t.fk_element = ' . $filterId : ''));
+$filterSQL .= ($filterId > 0 ? ' AND t.fk_element = ' . $filterId : '');
 
-$geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => $filterSQL]);
+if ($filterId > 0) {
+    $project->fetch($filterId);
+    $contacts = $project->liste_contact();
+} else {
+    $contacts = saturne_fetch_all_object_type('contact', '', '', 0, 0, ['customsql' => 'ct.code = "PROJECTADDRESS"'], 'AND', 0, 0, 0, ' LEFT JOIN ' . MAIN_DB_PREFIX . 'element_contact as ec ON t.rowid = ec.fk_socpeople LEFT JOIN ' . MAIN_DB_PREFIX . 'c_type_contact as ct ON ec.fk_c_type_contact = ct.rowid');
+}
+
+if (is_array($contacts) && !empty($contacts)) {
+    foreach($contacts as $contactSingle) {
+        if (is_object($contactSingle)) {
+            $geolocation->fetch('', '', ' AND t.fk_element = ' . $contactSingle->id);
+        } else if (is_array($contactSingle) && $contactSingle['code'] == 'PROJECTADDRESS') {
+            $geolocation->fetch('', '', ' AND t.fk_element = ' . $contactSingle['id']);
+        }
+        if ($geolocation->latitude > 0 && $geolocation->longitude > 0) {
+            $geolocations[] = clone $geolocation;
+        }
+    }
+}
+
 if (is_array($geolocations) && !empty($geolocations)) {
     foreach($geolocations as $geolocation) {
         $geolocation->convertCoordinates();
-        $objectLinked->fetch($geolocation->fk_element);
+        $objectLinked->fetch($filterId);
 
-        if ($objectLinked->entity != $conf->entity || ($source == 'pwa' && empty($objectLinked->opp_status))) {
+        if ((!empty($filterId) && $objectLinked->entity != $conf->entity) || ($source == 'pwa' && empty($objectLinked->opp_status))) {
             continue;
         }
 
@@ -260,8 +280,8 @@ if (is_array($geolocations) && !empty($geolocations)) {
     }
 }
 
-if ($fromId > 0) {
-    $objectLinked->fetch($fromId);
+if ($filterId > 0) {
+    $objectLinked->fetch($filterId);
 
     saturne_get_fiche_head($objectLinked, 'map', $title);
 

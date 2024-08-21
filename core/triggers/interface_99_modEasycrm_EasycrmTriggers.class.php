@@ -111,6 +111,28 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                 $object->fetch($object->id);
                 set_notation_object_contact($object);
                 break;
+            case 'PROJECT_ADD_CONTACT':
+                require_once __DIR__ . '/../../class/geolocation.class.php';
+
+                $contactID = GETPOST('contactid');
+                $contact   = new Contact($this->db);
+                $contact->fetch($contactID);
+
+                if (dol_strlen($contact->address) > 0) {
+                    $geolocation   = new Geolocation($this->db);
+                    $addressesList = $geolocation->getDataFromOSM($contact);
+
+                    if (!empty($addressesList)) {
+                        $address = $addressesList[0];
+
+                        $geolocation->element_type = 'contact';
+                        $geolocation->latitude     = $address->lat;
+                        $geolocation->longitude    = $address->lon;
+                        $geolocation->fk_element   = $contactID;
+                        $geolocation->create($user);
+                    }
+                }
+                break;
             case 'FACTURE_ADD_CONTACT' :
                 $actioncomm->elementtype = $object->element;
                 $actioncomm->code        = 'AC_' . strtoupper($object->element) . '_ADD_CONTACT';
