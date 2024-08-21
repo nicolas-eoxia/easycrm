@@ -324,7 +324,7 @@ if ($source != 'pwa') {
     print '</form>';
 }
 
-$picto = img_picto('location', 'fontawesome_search-location_fas_#007BFF');
+$picto = img_picto($langs->trans('MyPosition'), 'fontawesome_search-location_fas_#007BFF');
 print '<div id="geolocate-button" class="geolocate-button">' . $picto . '</div>';
 
 ?>
