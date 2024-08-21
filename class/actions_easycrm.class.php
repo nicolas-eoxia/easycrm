@@ -345,20 +345,21 @@ class ActionsEasycrm
                 <?php
             }
 
-            $contact = new Contact($db);
-            $contact->fetch($object->array_options['options_projectaddress']);
-            $pictoContact = img_picto('contact', 'contact') . ' ' . $contact->lastname;
-
-            $outAddress = '<td>';
-            if ($contact->id > 0) {
-                $outAddress .= dolButtonToOpenUrlInDialogPopup('address' . $object->id, $langs->transnoentities('FavoriteAddress'), $pictoContact, '/contact/card.php?id='. $contact->id);
+            if (!empty($object->array_options['options_projectaddress'])) {
+                $contact = new Contact($db);
+                $result  = $contact->fetch($object->array_options['options_projectaddress']);
+                if ($result > 0) {
+                    $pictoContact = img_picto('', 'contact', 'class="pictofixedwidth"') . $contact->lastname;
+                    $outAddress = '<td>';
+                    $outAddress .= dolButtonToOpenUrlInDialogPopup('address' . $result, $langs->transnoentities('FavoriteAddress'), $pictoContact, '/contact/card.php?id='. $contact->id);
+                    $outAddress .= '</td></tr>';
+                    ?>
+                    <script>
+                        jQuery('.valuefield.project_extras_projectaddress').replaceWith(<?php echo json_encode($outAddress); ?>)
+                    </script>
+                    <?php
+                }
             }
-            $outAddress .= '</td></tr>';
-            ?>
-            <script>
-                jQuery('.valuefield.project_extras_projectaddress').replaceWith(<?php echo json_encode($outAddress); ?>)
-            </script>
-            <?php
         }
 
         // Do something only for the current context

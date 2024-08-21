@@ -216,14 +216,11 @@ if (is_array($contacts) && !empty($contacts)) {
     foreach($contacts as $contactSingle) {
         if (is_object($contactSingle)) {
             $geolocation->fetch('', '', ' AND t.fk_element = ' . $contactSingle->id);
-            if ($geolocation->latitude > 0 && $geolocation->longitude > 0) {
-                $geolocations[] = clone $geolocation;
-            }
         } else if (is_array($contactSingle) && $contactSingle['code'] == 'PROJECTADDRESS') {
             $geolocation->fetch('', '', ' AND t.fk_element = ' . $contactSingle['id']);
-            if ($geolocation->latitude > 0 && $geolocation->longitude >0) {
-                $geolocations[] = clone $geolocation;
-            }
+        }
+        if ($geolocation->latitude > 0 && $geolocation->longitude > 0) {
+            $geolocations[] = clone $geolocation;
         }
     }
 }

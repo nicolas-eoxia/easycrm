@@ -581,7 +581,7 @@ class modEasyCRM extends DolibarrModules
 
             dolibarr_set_const($this->db, 'EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG', $categoryID, 'integer', 0, '', $conf->entity);
         }
-        if (empty(getDolGlobalInt('EASYCRM_ADDRESS_MIGRATION'))) {
+        if (empty(getDolGlobalInt('EASYCRM_ADDRESS_BACKWARD_COMPATIBILITY'))) {
             require_once DOL_DOCUMENT_ROOT . '/contact/class/contact.class.php';
             require_once __DIR__ . '/../../class/geolocation.class.php';
             require_once __DIR__ . '/../../class/address.class.php';
@@ -600,17 +600,19 @@ class modEasyCRM extends DolibarrModules
                     $contact->fk_pays    = $address->fk_country;
                     $contact->zip        = $address->zip;
                     $contact->town       = $address->town;
-                    $contactID           = $contact->create($user);
+
+                    $contactID = $contact->create($user);
 
                     $geolocation->element_type = 'contact';
                     $geolocation->latitude     = $address->latitude;
                     $geolocation->longitude    = $address->longitude;
                     $geolocation->fk_element   = $contactID;
+
                     $geolocation->create($user);
                 }
             }
 
-            dolibarr_set_const($this->db, 'EASYCRM_ADDRESS_MIGRATION', 1, 'integer', 0, '', $conf->entity);
+            dolibarr_set_const($this->db, 'EASYCRM_ADDRESS_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
         }
 
 		// Permissions

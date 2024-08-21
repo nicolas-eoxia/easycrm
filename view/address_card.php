@@ -68,13 +68,14 @@ $objectLinked = new $className($db);
 $contact      = new Contact($db);
 $geolocation  = new Geolocation($db);
 $project      = new Project($db);
-$project->fetch($fromId);
 
 // Initialize view objects
 $form        = new Form($db);
 $formcompany = new FormCompany($db);
 
 $hookmanager->initHooks([$objectType . 'address', $objectType . 'address', 'easycrmglobal', 'globalcard']); // Note that conf->hooks_modules contains array
+
+$project->fetch($fromId);
 
 // Security check - Protection if external user
 $permissiontoread   = $user->rights->easycrm->address->read;
@@ -103,26 +104,27 @@ if (empty($reshook)) {
 	if ($action == 'add_address' && $permissiontoadd && !$cancel) {
 		if (empty($contactName) || empty($contactAddress)) {
 			setEventMessages($langs->trans('EmptyValue'), [], 'errors');
-			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '&name=' . $contactName . '&address=' . $contactAddress);
+			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '&name=' . $contactName . '&address_detail=' . $contactAddress);
 			exit;
 		} else {
             $contact->lastname   = $contactName;
             $contact->address    = $contactAddress;
             $contact->fk_project = $fromId;
-            $contactID           = $contact->create($user);
 
-            $project->add_contact($contactID, 'PROJECTADDRESS');
+            $contactID = $contact->create($user);
 
 			if ($contactID > 0) {
-				setEventMessages($langs->trans('AddressCreated'), []);
+                $project->add_contact($contactID, 'PROJECTADDRESS');
+                setEventMessages($langs->trans('AddressCreated'), []);
 			} else {
 				setEventMessages($langs->trans('ErrorCreateAddress'), [], 'errors');
 			}
             header('Location: ' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType);
+            exit;
 		}
 	}
 
-    if ($action == 'edit_address' && $permissiontoadd && !$cancel) {
+    if ($action == 'edit_address' && $permissiontoadd) {
         if ($contactID > 0) {
             $contact->fetch($contactID);
             $contact->lastname = $contactName;
@@ -148,6 +150,8 @@ if (empty($reshook)) {
                 setEventMessages($langs->trans('ErrorUpdateAddress'), [], 'errors');
             }
         }
+        header('Location: ' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType);
+        exit;
     }
 
 	// Action to delete address
@@ -170,6 +174,7 @@ if (empty($reshook)) {
 				setEventMessages($langs->trans('ErrorDeleteAddress'), [], 'errors');
 			}
 			header('Location: ' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType);
+            exit;
 		}
 	}
 
@@ -177,7 +182,7 @@ if (empty($reshook)) {
         $objectLinked->fetch($fromId);
         if (!empty($objectLinked) && $contactID > 0) {
             $objectLinked->array_options['options_' . $objectType . 'address'] = $objectLinked->array_options['options_' . $objectType . 'address'] == $contactID ? 0 : $contactID;
-            $objectLinked->update($user);
+            $objectLinked->updateExtrafield($objectType . 'address');
         }
     }
 }
@@ -220,7 +225,7 @@ if ($action == 'create' && $fromId > 0) {
     $doleditor->Create();
     print '</td></tr>';
 
-	print '</table></br>';
+    print '</table>';
 
     print dol_get_fiche_end();
 
@@ -243,7 +248,7 @@ if ($action == 'create' && $fromId > 0) {
         print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
     }
 
-    print '<table class="border centpercent tableforfieldcreate address-table">';
+    print '<table class="border centpercent tableforfieldedit address-table">';
 
     // Name -- Nom
     print '<tr><td class="fieldrequired">' . $langs->trans('Name') . '</td><td>';
@@ -256,7 +261,7 @@ if ($action == 'create' && $fromId > 0) {
     $doleditor->Create();
     print '</td></tr>';
 
-    print '</table></br>';
+    print '</table>';
 
     print dol_get_fiche_end();
 
