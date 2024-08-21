@@ -62,6 +62,43 @@ class ActionsEasycrm
     }
 
     /**
+     * Overloading the doActions function : replacing the parent's function with the one below
+     *
+     * @param  array  $parameters Hook metadata (context, etc...)
+     * @param  object $object     The object to process
+     * @param  string $action     Current action (if set). Generally create or edit or null
+     * @return int                0 < on error, 0 on success, 1 to replace standard code
+     */
+    public function doActions(array $parameters, $object, string $action): int
+    {
+        global $user;
+
+        $error = 0; // Error counter
+
+        // Do something only for the current context
+        if ($parameters['currentcontext'] == 'projectlist') {
+            if ($action == 'update_prob') {
+                $object->fetch(GETPOST('project_id', 'int'));
+                if (GETPOST('up')) {
+                    $object->opp_percent += 10;
+                } else {
+                    $object->opp_percent -= 10;
+                }
+                $object->update($user);
+            }
+        }
+
+        if (!$error) {
+            $this->results = array('myreturn' => 999);
+            $this->resprints = 'A text to show';
+            return 0; // or return 1 to replace standard code
+        } else {
+            $this->errors[] = 'Error message';
+            return -1;
+        }
+    }
+
+    /**
      *  Overloading the addMoreBoxStatsCustomer function : replacing the parent's function with the one below
      *
      * @param  array        $parameters Hook metadatas (context, etc...)
@@ -433,6 +470,13 @@ class ActionsEasycrm
                 </script>
                 <?php
             }
+        }
+
+        // Do something only for the current context
+        if ($parameters['currentcontext'] == 'projectlist') { ?>
+            <script src="../custom/easycrm/js/easycrm.js"></script>
+            <script src="../custom/easycrm/js/modules/project.js"></script>
+            <?php
         }
 
         return 0; // or return 1 to replace standard code
