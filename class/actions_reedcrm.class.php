@@ -1305,7 +1305,7 @@ class ActionsReedcrm
                         $dialogUrl = dol_buildpath('custom/reedcrm/core/ajax/get_relaunches_list.php', 1);
 
                         $out[$parameters['key']] .= '<div id="btn-relaunch-' . $actionCommType . '-' . $parameters['obj']->rowid . '" class="ui-dialog-open reedcrm-relaunch-button reedcrm-plist-relaunch-btn-' . $actionCommType . '"';
-                        $out[$parameters['key']] .= ' data-dialog-id="dialog-relaunch-' . $actionCommType . '-' . $parameters['obj']->rowid . '" data-dialog-title="" data-dialog-icon="fas fa-' . $actonComByType['picto'] . '" data-dialog-align="center" data-dialog-url="' . $dialogUrl . '" data-project-id="' . $parameters['obj']->rowid . '" data-action-comm-type="' . $actonComByType['actioncode'] . '">';
+                        $out[$parameters['key']] .= ' data-dialog-id="dialog-relaunch-' . $actionCommType . '-' . $parameters['obj']->rowid . '" data-dialog-title="' . $langs->trans($actionCommType) . '" data-dialog-icon="fas fa-' . $actonComByType['picto'] . '" data-dialog-align="center" data-dialog-url="' . $dialogUrl . '" data-dialog-footer="none" data-project-id="' . $parameters['obj']->rowid . '" data-action-comm-type="' . $actonComByType['actioncode'] . '">';
 
                         $out[$parameters['key']] .= '<div class="reedcrm-plist-relaunch-btn-content">';
                         $out[$parameters['key']] .= '<i class="fas fa-' . $actonComByType['picto'] . '"></i>';
