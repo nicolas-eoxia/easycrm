@@ -32,6 +32,7 @@ if (file_exists('../../reedcrm.main.inc.php')) {
 
 // Load Dolibarr libraries
 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
 
 // Global variables definitions
 global $conf, $db, $langs, $user;
@@ -56,50 +57,23 @@ if (!$user->hasRight('agenda', 'myactions', 'read') && !$user->hasRight('agenda'
 
 // Load project
 if ($project->fetch($projectId) <= 0) {
-    top_httphead('application/json');
-    http_response_code(404);
     echo json_encode(['success' => false, 'error' => 'Project not found']);
     exit;
 }
 
-$filter = ' AND a.id IN (SELECT c.fk_actioncomm FROM ' . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . ((int) $conf->global->REEDCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG) . ')';
-
-$actionComm = new ActionComm($db);
+$filter      = ' AND a.code = "' . $actionCommType . '" AND a.id IN (SELECT c.fk_actioncomm FROM ' . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . getDolGlobalInt('REEDCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG') . ')';
 $actionComms = $actionComm->getActions($project->socid, $projectId, 'project', $filter, 'a.datec');
 
 if (is_string($actionComms)) {
-    top_httphead('application/json');
-    http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Error fetching actions: ' . $actionComms]);
     exit;
 }
-
-ob_start();
 
 if (is_array($actionComms) && !empty($actionComms)) {
     print '<div class="reedcrm-relaunch-tooltip-content">';
     print '<table class="noborder centpercent">';
 
     foreach ($actionComms as $ac) {
-        $matchesType = false;
-        if ($actionType == 'AC_TEL' && ($ac->type_code == 'AC_TEL' || (isset($ac->code) && $ac->code == 'AC_TEL'))) {
-            $matchesType = true;
-        } elseif ($actionType == 'AC_EMAIL' && ($ac->type_code == 'AC_EMAIL' || (isset($ac->code) && $ac->code == 'AC_EMAIL'))) {
-            $matchesType = true;
-        } elseif ($actionType == 'AC_RDV' && ($ac->type_code == 'AC_RDV' || (isset($ac->code) && $ac->code == 'AC_RDV'))) {
-            $matchesType = true;
-        } elseif ($actionType != 'AC_TEL' && $actionType != 'AC_EMAIL' && $actionType != 'AC_RDV') {
-            // For "other" type, exclude AC_TEL, AC_EMAIL, AC_RDV
-            if ($ac->type_code != 'AC_TEL' && $ac->type_code != 'AC_EMAIL' && $ac->type_code != 'AC_RDV' &&
-                (!isset($ac->code) || ($ac->code != 'AC_TEL' && $ac->code != 'AC_EMAIL' && $ac->code != 'AC_RDV'))) {
-                $matchesType = true;
-            }
-        }
-
-        if (!$matchesType) {
-            continue;
-        }
-
         $contactName = '';
         if (!empty($ac->contact_id)) {
             require_once DOL_DOCUMENT_ROOT . '/contact/class/contact.class.php';
@@ -119,7 +93,7 @@ if (is_array($actionComms) && !empty($actionComms)) {
         }
 
         print '<tr class="oddeven">';
-        print '<td class="nowrap" style="min-width: 150px;">';
+        print '<td class="nowrap">';
         print dol_print_date($ac->datep, 'dayhour', 'tzuser');
         print '</td>';
         print '<td class="tdoverflowmax200">';
