@@ -1366,7 +1366,7 @@ class ActionsReedcrm
             } elseif ($parameters['key'] == 'photo') {
                 $projectDir = $conf->project->multidir_output[$conf->entity] . '/' . dol_sanitizeFileName($parameters['obj']->ref) . '/';
 
-                $out[$parameters['key']] = saturne_show_medias_linked('projet', $projectDir , 'small', 1, -1, 0, 0, 30, 30, 0, 1, 0, dol_sanitizeFileName($parameters['obj']->ref), $parameters['object'], '', 0, 0, 0, 0, '', 1, ['useAI' => 1]);
+                $out[$parameters['key']] = saturne_show_medias_linked('projet', $projectDir , 'small', 1, -1, 0, 0, 30, 30, 0, 1, 0, dol_sanitizeFileName($parameters['obj']->ref), $parameters['object'], '', 0, 0, 0, 0, '', 1, ['useAi' => 0, 'filter' => '\.(png|jpg|gif)$']);
             }
 
             $this->results = $out;
