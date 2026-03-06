@@ -502,7 +502,7 @@ class modReedCRM extends DolibarrModules
             'prefix'   => '<i class="fas fa-project-diagram pictofixedwidth"></i>',
             'mainmenu' => 'reedcrm',
             'leftmenu' => 'opportunities',
-            'url'      => '/projet/list.php?search_usage_opportunity=1',
+            'url'      => '/reedcrm/view/project/opportunities_list.php',
             'langs'    => 'reedcrm@reedcrm',
             'position' => 1000 + $r,
             'enabled'  => 'isModEnabled(\'reedcrm\')',
