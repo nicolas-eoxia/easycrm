@@ -1352,12 +1352,36 @@ class ActionsReedcrm
                 $out[$parameters['key']] .= '</div>';
                 $out[$parameters['key']] .= '</div>';
 
+            } elseif ($parameters['key'] == 'datec') {
+                $date = $db->jdate($parameters['obj']->datec);
+                $dateString = dol_print_date($date, '%d/%m/%Y');
+                $hourString = dol_print_date($date, '%H:%M');
+
+                $out[$parameters['key']]   = '<div class="reedcrm-plist-datec">';
+
+                $out[$parameters['key']]  .= '<div class="reedcrm-plist-datec-date">' .$dateString. '</div>';
+                $out[$parameters['key']]  .= '<div class="reedcrm-plist-datec-hour">' .$hourString. '</div>';
+
+                $out[$parameters['key']]  .= '</div>';
             }
 
             $this->results = $out;
         }
 
         return 0; // or return 1 to replace standard code
+    }
+
+    public function saturnePrintColumnTitle(array $parameters): int
+    {
+        if (preg_match('/projectlist/', $parameters['context'])) {
+            $out = '';
+
+            if ($parameters['key'] == 'datec') {
+                $out = 'TESTEUH';
+            }
+            $this->resprints = $out;
+        }
+        return 0;
     }
 
     /**
