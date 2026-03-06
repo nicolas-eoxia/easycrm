@@ -1325,9 +1325,36 @@ class ActionsReedcrm
                     $out[$parameters['key']] .= '</div>';
                     $out[$parameters['key']] .= '</div>';
                 }
+            } elseif ($parameters['key'] == 'contact_details') {
 
-                $this->results = $out;
+                $thirdPartyName = !empty($parameters['obj']->options_reedcrm_lastname) ? dol_escape_htmltag($parameters['obj']->options_reedcrm_lastname) : '';
+                $thirdPartyName2 = !empty($parameters['obj']->options_reedcrm_firstname) ? dol_escape_htmltag($parameters['obj']->options_reedcrm_firstname) : '';
+                $thirdPartyEmail = !empty($parameters['obj']->options_reedcrm_email) ? dol_escape_htmltag($parameters['obj']->options_reedcrm_email) : '';
+                $thirdPartyPhone = !empty($parameters['obj']->options_projectphone) ? dol_escape_htmltag($parameters['obj']->options_projectphone) : '';
+
+                $out[$parameters['key']] .= '<div class="reedcrm-plist-coordonnees">';
+
+                $out[$parameters['key']] .= '<div class="reedcrm-plist-coordonnees-box">';
+
+                $thirdPartyName = $thirdPartyName ? ($thirdPartyName . ' ' . $thirdPartyName2) : 'N/A';
+                $out[$parameters['key']] .= '<div class="reedcrm-plist-coordonnees-name">' . $thirdPartyName . '</div>';
+
+                $out[$parameters['key']] .= '<div class="reedcrm-plist-coordonnees-email"><i class="fas fa-envelope"></i>' . ($thirdPartyEmail ? $thirdPartyEmail : 'N/A') . '</div>';
+                $out[$parameters['key']] .= '<div class="reedcrm-plist-coordonnees-phone"><i class="fas fa-phone-alt"></i>' . ($thirdPartyPhone ? $thirdPartyPhone : 'N/A') . '</div>';
+                $out[$parameters['key']] .= '</div>';
+
+                $out[$parameters['key']] .= '<div class="reedcrm-plist-coordonnees-actions">';
+                if ($thirdPartyPhone) {
+                    $out[$parameters['key']] .= '<a href="tel:' . preg_replace('/\s+/', '', $parameters['obj']->phone) . '" class="reedcrm-plist-coordonnees-btn"><i class="fas fa-phone-alt"></i></a>';
+                } else {
+                    $out[$parameters['key']] .= '<div class="reedcrm-plist-coordonnees-btn disabled"><i class="fas fa-phone-alt"></i></div>';
+                }
+                $out[$parameters['key']] .= '</div>';
+                $out[$parameters['key']] .= '</div>';
+
             }
+
+            $this->results = $out;
         }
 
         return 0; // or return 1 to replace standard code

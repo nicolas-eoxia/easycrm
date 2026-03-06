@@ -96,9 +96,10 @@ if (!$sortorder) {
 $excludeFields = [];
 
 $object->fields['relauch_commercial2'] = ['label' => 'RelauchCommercial2', 'enabled' => 1, 'position' => 150,  'visible' => 1, 'csslist' => 'center', 'disablesort' => 1];
+$object->fields['contact_details']     = ['label' => 'ContactDetails', 'enabled' => 1, 'position' => 151, 'visible' => 1, 'csslist' => 'center', 'disablesort' => 1];
 //$object->fields['tasks']               = ['label' => 'Tasks', 'enabled' => 1, 'position' => 160,  'visible' => -1, 'csslist' => 'center', 'disablesort' => 1];
 
-$excludeFields = array_merge($excludeFields, ['relauch_commercial2', 'tasks']);
+$excludeFields = array_merge($excludeFields, ['relauch_commercial2', 'contact_details', 'tasks']);
 
 // Initialize array of search criterias
 $searchAll                   = trim(GETPOST('search_all'));

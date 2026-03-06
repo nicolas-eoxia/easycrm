@@ -124,7 +124,7 @@
 // Contact Coordinates specific logic
 .reedcrm-plist-coordonnees {
     display: flex;
-    align-items: center;
+    align-items: left;
     gap: 8px;
     max-width: 350px;
     white-space: nowrap;
@@ -154,10 +154,11 @@
         flex-grow: 1;
         min-width: 0;
         line-height: 1.2;
+        text-align: left;
 
         .reedcrm-plist-coordonnees-name {
             font-weight: 600;
-            font-size: 1em;
+            font-size: 0.8em;
             color: #333;
             text-overflow: ellipsis;
             overflow: hidden;
@@ -173,7 +174,7 @@
         .reedcrm-plist-coordonnees-email,
         .reedcrm-plist-coordonnees-phone {
             color: #888;
-            font-size: 0.5em;
+            font-size: 0.58em;
             text-overflow: ellipsis;
             overflow: hidden;
 
@@ -212,6 +213,12 @@
 
             i {
                 color: white;
+            }
+
+            &.disabled {
+                background-color: #9aa3b2;
+                cursor: not-allowed;
+                opacity: 0.6;
             }
         }
     }
