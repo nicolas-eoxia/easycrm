@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2025 EVARISK <technique@evarisk.com>
+/* Copyright (C) 2026 EVARISK <technique@evarisk.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,59 +16,45 @@
  */
 
 /**
- * \file    ajax/get_relaunches_list.php
+ * \file    core/ajax/get_relaunches_list.php
  * \ingroup reedcrm
  * \brief   AJAX endpoint to get filtered list of relaunches for tooltip
  */
 
-if (!defined('NOTOKENRENEWAL')) {
-    define('NOTOKENRENEWAL', '1');
-}
-if (!defined('NOREQUIREMENU')) {
-    define('NOREQUIREMENU', '1');
-}
-if (!defined('NOREQUIREHTML')) {
-    define('NOREQUIREHTML', '1');
-}
-if (!defined('NOREQUIREAJAX')) {
-    define('NOREQUIREAJAX', '0');
-}
-
-// Load Dolibarr environment
-if (file_exists('../../main.inc.php')) {
-    require_once __DIR__ . '/../../main.inc.php';
-} elseif (file_exists('../../../main.inc.php')) {
-    require_once __DIR__ . '/../../../main.inc.php';
+// Load ReedCRM environment
+if (file_exists('../../reedcrm.main.inc.php')) {
+    require_once __DIR__ . '/../../reedcrm.main.inc.php';
+} elseif (file_exists('../../../reedcrm.main.inc.php')) {
+    require_once __DIR__ . '/../../../reedcrm.main.inc.php';
 } else {
-    die('Include of main fails');
+    die('Include of reedcrm main fails');
 }
 
-global $conf, $db, $langs, $user;
-require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
-require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
+// Load Dolibarr libraries
 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
 
-// Security check
-if (!$user->hasRight('agenda', 'myactions', 'read') && !$user->hasRight('agenda', 'allactions', 'read')) {
-    top_httphead('application/json');
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Access denied']);
-    exit;
-}
+// Global variables definitions
+global $conf, $db, $langs, $user;
 
-$projectId = GETPOSTINT('project_id');
-$actionType = GETPOST('action_type', 'aZ09'); // AC_TEL, AC_EMAIL, AC_RDV, or other
-$socid = GETPOSTINT('socid');
+// Get parameters
+$projectId      = GETPOSTINT('projectId');
+$actionCommType = GETPOST('actionCommType', 'aZ09'); // AC_TEL, AC_EMAIL, AC_RDV, or other
 
-if (empty($projectId) || empty($actionType)) {
-    top_httphead('application/json');
-    http_response_code(400);
+if (empty($projectId) || empty($actionCommType)) {
     echo json_encode(['success' => false, 'error' => 'Missing parameters']);
     exit;
 }
 
+// Initialize technical objects
+$project    = new Project($db);
+$actionComm = new ActionComm($db);
+
+// Security check
+if (!$user->hasRight('agenda', 'myactions', 'read') && !$user->hasRight('agenda', 'allactions', 'read')) {
+    exit;
+}
+
 // Load project
-$project = new Project($db);
 if ($project->fetch($projectId) <= 0) {
     top_httphead('application/json');
     http_response_code(404);
@@ -79,7 +65,7 @@ if ($project->fetch($projectId) <= 0) {
 $filter = ' AND a.id IN (SELECT c.fk_actioncomm FROM ' . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . ((int) $conf->global->REEDCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG) . ')';
 
 $actionComm = new ActionComm($db);
-$actionComms = $actionComm->getActions($socid ?: $project->socid, $projectId, 'project', $filter, 'a.datec');
+$actionComms = $actionComm->getActions($project->socid, $projectId, 'project', $filter, 'a.datec');
 
 if (is_string($actionComms)) {
     top_httphead('application/json');
@@ -171,11 +157,3 @@ if (is_array($actionComms) && !empty($actionComms)) {
 } else {
     print '<div class="reedcrm-relaunch-tooltip-empty">' . $langs->trans('NoEvents') . '</div>';
 }
-
-$html = ob_get_clean();
-
-top_httphead('application/json');
-
-echo json_encode(['success' => true, 'html' => $html]);
-exit;
-

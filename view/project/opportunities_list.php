@@ -93,16 +93,16 @@ if (!$sortorder) {
     $sortorder = 'DESC';
 }
 
-//$excludeFields      = [];
-//
-//$object->fields['question_type'] = ['label' => 'QuestionType', 'enabled' => 1, 'position' => 150,  'visible' => -1, 'csslist' => 'center', 'disablesort' => 1];
-//$object->fields['tasks']         = ['label' => 'Tasks', 'enabled' => 1, 'position' => 160,  'visible' => -1, 'csslist' => 'center', 'disablesort' => 1];
-//
-//$excludeFields = array_merge($excludeFields, ['question_type', 'tasks']);
+$excludeFields = [];
+
+$object->fields['relauch_commercial2'] = ['label' => 'RelauchCommercial2', 'enabled' => 1, 'position' => 150,  'visible' => 1, 'csslist' => 'center', 'disablesort' => 1];
+//$object->fields['tasks']               = ['label' => 'Tasks', 'enabled' => 1, 'position' => 160,  'visible' => -1, 'csslist' => 'center', 'disablesort' => 1];
+
+$excludeFields = array_merge($excludeFields, ['relauch_commercial2', 'tasks']);
 
 // Initialize array of search criterias
-$searchAll        = trim(GETPOST('search_all'));
-$search           = [];
+$searchAll                   = trim(GETPOST('search_all'));
+$search                      = [];
 $search['usage_opportunity'] = 1;
 foreach ($object->fields as $key => $val) {
     if (GETPOST('search_' . $key, 'alpha') !== '') {
@@ -203,7 +203,17 @@ if (empty($resHook)) {
  */
 
 $title = $langs->trans(ucfirst($object->element) . 'List');
-saturne_header(0,'', $title, '', '', 0, 0, [], [], '', 'mod-' . $object->module . '-' . $object->element . ' page-list bodyforlist');
+saturne_header(0,'', $title, '', '', 0, 0, [], [], '', 'mod-' . $object->element . ' page-list bodyforlist');
+
+?>
+    <script nonce="<?php echo getNonce(); ?>">
+        Dolibarr.setContextVars(<?php print json_encode([
+            'DOL_VERSION'            => DOL_VERSION,
+            'MAIN_LANG_DEFAULT'      => 'fr_FR',
+            'DOL_LANG_INTERFACE_URL' => dol_buildpath('admin/tools/ui/experimental/experiments/dolibarr-context/langs-tool-interface.php', 1),
+        ]) ?>);
+    </script>
+<?php
 
 require_once __DIR__ . '/../../../saturne/core/tpl/list/objectfields_list_build_sql_select.tpl.php';
 require_once __DIR__ . '/../../../saturne/core/tpl/list/objectfields_list_header.tpl.php';

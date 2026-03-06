@@ -262,6 +262,10 @@
   opacity: 0.9;
 }
 
+.mod-project .div-table-responsive table.liste td {
+  padding: 2px;
+}
+
 .reedcrm-plist-relaunch-wrapper {
   display: flex;
   align-items: center;

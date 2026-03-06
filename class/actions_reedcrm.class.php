@@ -583,28 +583,29 @@ class ActionsReedcrm
             if (isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
                 ?>
                 <script>
-                    $('table tr.oddeven td').css('padding', 2);
+                    //$('table tr.oddeven td').css('padding', 2);
 
-                    var titles = ["Réf.", "Date fin", "Assigné à", "Statut opportunité", "Relances commerciales", "Montant pondéré opp.", "Montant opportunité", "Vocal"];
+                    var titles = ["Réf.", "Libellé projet", "Date fin", "Assigné à", "Statut opportunité", "Relances commerciales", "Montant pondéré opp.", "Montant opportunité", "Vocal"];
 
                     // Récupère les index correspondants
-                    var indexes = [];
+                    var indexes = {};
 
                     titles.forEach(function(title) {
                         var index = $('th[title="' + title + '"]').index();
                         if (index !== -1) {
-                            indexes.push(index);
+                            indexes[index] = title.replace(" ", "_");
                         }
                     });
 
                     // Applique le traitement sur chaque colonne trouvée
-                    indexes.forEach(function(index) {
+                    Object.entries(indexes).forEach(([index, title]) => {
                         var cells = $('table tr').find('td:eq(' + index + ')');
                         cells.removeClass('tdoverflowmax200');
                         cells.removeClass('right');
                         cells.removeClass('tdoverflowmax150');
                         cells.addClass('tdoverflowmax75');
                         cells.find('span.fa-project-diagram').remove();
+                        cells.addClass('projectlist_col_' + title);
                     });
                 </script>
                 <?php
@@ -971,18 +972,26 @@ class ActionsReedcrm
                         $out5 .= '</div>';
                         $out5 .= '</td>';
 
+                        $out7 = '<td class="tdoverflowmax200" title="' . $parameters['obj']->title . ' ' . $desc . '">' . $parameters['obj']->title . '<br><i>' . $desc . '</i></td>';
                     }
                     $rowId = (int) $parameters['obj']->id; ?>
                     <script>
                         (function () {
                             var rowId = <?php echo $rowId; ?>;
                             var $row = jQuery('tr[data-rowid="' + rowId + '"]');
+
+                            var index = $('th[title="Libellé projet"]').index();
+                            var cells = $('table.listwithfilterbefore tbody tr').find('td:eq(' + index + ')');
+                            cells = cells.not('.liste_titre');
+                            var titleCell = cells.eq(<?= $parameters['i'] ?>);
+
                             var outJS = <?php echo json_encode($out); ?>;
                             var outJS2 = <?php echo json_encode($out2); ?>;
                             var outJS3 = <?php echo json_encode($out3); ?>;
                             var outJS4 = <?php echo json_encode($out4); ?>;
                             var outJS5 = <?php echo json_encode($out5); ?>;
                             var outJS6 = <?php echo json_encode($out6); ?>;
+                            var outJS7 = <?php echo json_encode($out7); ?>;
                             var commRelauchCell = $row.find('td[data-key="projet.commrelaunch"]');
                             var commTaskCell = $row.find('td[data-key="projet.commtask"]');
                             var probCell = $row.find("td.right").filter(function () { return jQuery(this).text().indexOf('%') >= 0; });
@@ -996,6 +1005,7 @@ class ActionsReedcrm
                             if (vocalCell.length) vocalCell.replaceWith(outJS4);
                             if (coordonneesCell.length) coordonneesCell.replaceWith(outJS5);
                             if (descriptionCell.length) descriptionCell.replaceWith(outJS6);
+                            if (titleCell.length) titleCell.html(outJS7);
                         })();
                     </script>
                     <?php
@@ -1227,6 +1237,96 @@ class ActionsReedcrm
                     setEventMessages($langs->trans('OppStatusAssignedTo', $count), []);
                     header('Location:' . $_SERVER['PHP_SELF']);
                 }
+            }
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
+
+    public function saturnePrintFieldListLoopObject(array $parameters): int
+    {
+        global $conf, $db, $langs, $user;
+
+        if (preg_match('/projectlist/', $parameters['context'])) {
+            $out = [];
+
+            if ($parameters['key'] == 'relauch_commercial2') {
+                if (isModEnabled('agenda')) {
+                    require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+
+                    $actionComm = new ActionComm($db);
+
+                    $filter      = ' AND a.id IN (SELECT c.fk_actioncomm FROM ' . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->REEDCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
+                    $actionComms = $actionComm->getActions($parameters['obj']->socid, $parameters['obj']->rowid, 'project', $filter, 'a.datec');
+
+                    $actonComsByType = [
+                        'call' => [
+                            'picto'      => 'headset',
+                            'actioncode' => 'AC_TEL',
+                            'nb'         => 0
+                        ],
+                        'email' => [
+                            'picto'      => 'envelope',
+                            'actioncode' => 'AC_EMAIL',
+                            'nb'         => 0
+                        ],
+                        'rdv' => [
+                            'picto'      => 'calendar',
+                            'actioncode' => 'AC_RDV',
+                            'nb'         => 0
+                        ],
+                        'other' => [
+                            'picto'      => 'comment-dots',
+                            'actioncode' => 'AC_OTH',
+                            'nb'         => 0
+                        ],
+                    ];
+
+                    if (is_array($actionComms) && !empty($actionComms)) {
+                        foreach ($actionComms as $ac) {
+                            if ($ac->type_code == 'AC_TEL') {
+                                $actonComsByType['call']['nb']++;
+                            } elseif ($ac->type_code == 'AC_EMAIL') {
+                                $actonComsByType['email']['nb']++;
+                            } elseif ($ac->type_code == 'AC_RDV') {
+                                $actonComsByType['rdv']['nb']++;
+                            } else {
+                                $actonComsByType['other']['nb']++;
+                            }
+                        }
+                    }
+
+                    $cardProUrl = '/custom/reedcrm/view/procard.php?from_id=' . $parameters['obj']->rowid . '&from_type=project&project_id=' . $parameters['obj']->rowid;
+
+                    $out[$parameters['key']]  = '<div class="reedcrm-plist-relaunch-wrapper">';
+                    $out[$parameters['key']] .= '<div class="reedcrm-plist-relaunch-buttons reedcrm-relaunch-buttons">';
+
+                    foreach ($actonComsByType as $actionCommType => $actonComByType) {
+                        $dialogUrl = dol_buildpath('custom/reedcrm/core/ajax/get_relaunches_list.php', 1);
+
+                        $out[$parameters['key']] .= '<div id="btn-relaunch-' . $actionCommType . '-' . $parameters['obj']->rowid . '" class="ui-dialog-open reedcrm-relaunch-button reedcrm-plist-relaunch-btn-' . $actionCommType . '"';
+                        $out[$parameters['key']] .= ' data-dialog-id="dialog-relaunch-' . $actionCommType . '-' . $parameters['obj']->rowid . '" data-dialog-title="" data-dialog-icon="fas fa-' . $actonComByType['picto'] . '" data-dialog-align="center" data-dialog-url="' . $dialogUrl . '" data-project-id="' . $parameters['obj']->rowid . '" data-action-comm-type="' . $actonComByType['actioncode'] . '">';
+
+                        $out[$parameters['key']] .= '<div class="reedcrm-plist-relaunch-btn-content">';
+                        $out[$parameters['key']] .= '<i class="fas fa-' . $actonComByType['picto'] . '"></i>';
+                        $out[$parameters['key']] .= '<span class="reedcrm-plist-relaunch-count">' . $actonComByType['nb'] . '</span>';
+                        $out[$parameters['key']] .= '</div>';
+
+                        if ($user->hasRight('agenda', 'myactions', 'create')) {
+                            $cardProUrlFull = DOL_URL_ROOT . $cardProUrl . '&actioncode=' . $actonComByType['actioncode'];
+                            $out[$parameters['key']] .= '<span class="fa fa-plus reedcrm-plist-relaunch-add modal-open reedcrm-modal-open" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $parameters['obj']->rowid . '" data-modal-url="' . dol_escape_htmltag($cardProUrlFull) . '">';
+                            $out[$parameters['key']] .= '<input type="hidden" class="modal-options" data-modal-to-open="eventproCardModal">';
+                            $out[$parameters['key']] .= '</span>';
+                        }
+
+                        $out[$parameters['key']] .= '</div>';
+                    }
+
+                    $out[$parameters['key']] .= '</div>';
+                    $out[$parameters['key']] .= '</div>';
+                }
+
+                $this->results = $out;
             }
         }
 
