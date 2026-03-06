@@ -1363,25 +1363,16 @@ class ActionsReedcrm
                 $out[$parameters['key']]  .= '<div class="reedcrm-plist-datec-hour">' .$hourString. '</div>';
 
                 $out[$parameters['key']]  .= '</div>';
+            } elseif ($parameters['key'] == 'photo') {
+                $projectDir = $conf->project->multidir_output[$conf->entity] . '/' . dol_sanitizeFileName($parameters['obj']->ref) . '/';
+
+                $out[$parameters['key']] = saturne_show_medias_linked('projet', $projectDir , 'small', 1, -1, 0, 0, 30, 30, 0, 1, 0, dol_sanitizeFileName($parameters['obj']->ref), $parameters['object'], '', 0, 0, 0, 0, '', 1, ['useAI' => 1]);
             }
 
             $this->results = $out;
         }
 
         return 0; // or return 1 to replace standard code
-    }
-
-    public function saturnePrintColumnTitle(array $parameters): int
-    {
-        if (preg_match('/projectlist/', $parameters['context'])) {
-            $out = '';
-
-            if ($parameters['key'] == 'datec') {
-                $out = 'TESTEUH';
-            }
-            $this->resprints = $out;
-        }
-        return 0;
     }
 
     /**
