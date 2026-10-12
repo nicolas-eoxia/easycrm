@@ -263,6 +263,16 @@ QuickTaskCreations = quick task adds
 QuickEventCreation = Quick event add
 QuickEventCreations = quick event adds
 QuickCreationFrontendSuccess = Opportunity quick add completed successfully
+QuickCreationRemindMeLater = Remind me later
+QuickCreationReminderDate = Reminder date
+QuickCreationReminderIn3Days = In 3 days
+QuickCreationReminderIn1Week = In 1 week
+QuickCreationReminderIn1Month = In 1 month
+QuickCreationReminderTitlePlaceholder = Reminder subject (optional)
+QuickCreationReminderDefaultLabel = Reminder: %s
+QuickCreationReminderCreated = Reminder scheduled for %s
+ErrorQuickCreationReminderDateInPast = The reminder date must be in the future
+ErrorQuickCreationReminder = The opportunity was created, but not its reminder
 
 # Commercial / sales
 CommercialFollowUp = Sales follow-up

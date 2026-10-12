@@ -721,6 +721,23 @@ if ($action == 'add') {
         }
     }
 
+    // Checked before creating anything: the opportunity must not be saved without the reminder the user asked for
+    $reminderDate = 0;
+    $reminderID   = 0;
+    if (GETPOSTINT('add_reminder') > 0) {
+        // datetime-local value (Y-m-d\TH:i), typed in the user's own timezone
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/', GETPOST('reminder_date', 'alphanohtml'), $reminderDateParts)) {
+            $reminderDate = (int) dol_mktime((int) $reminderDateParts[4], (int) $reminderDateParts[5], 0, (int) $reminderDateParts[2], (int) $reminderDateParts[3], (int) $reminderDateParts[1], 'tzuserrel');
+        }
+        if ($reminderDate <= 0) {
+            setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentities('QuickCreationReminderDate')), null, 'errors');
+            $error++;
+        } elseif ($reminderDate <= dol_now()) {
+            setEventMessages($langs->trans('ErrorQuickCreationReminderDateInPast'), null, 'errors');
+            $error++;
+        }
+    }
+
     $projectID = 0;
     if ($error == 0) {
         $projectID = $project->create($user);
@@ -844,6 +861,20 @@ if ($action == 'add') {
                 setEventMessages($contact->error, $contact->errors, 'errors');
             }
         }
+
+        if ($reminderDate > 0) {
+            $reminderLabel = trim(GETPOST('reminder_title', 'alphanohtml'));
+            if ($reminderLabel === '') {
+                $reminderLabel = $langs->transnoentities('QuickCreationReminderDefaultLabel', $project->title);
+            }
+            $reminderContactID = $contactid > 0 ? $contactid : (!empty($contactID) && $contactID > 0 ? $contactID : 0);
+
+            $reminderID = reedcrm_create_call_reminder($db, $user, $reminderLabel, $reminderDate, $user->id, $projectID, max(0, (int) $project->socid), (int) $reminderContactID);
+            // The opportunity is already saved: a warning only, an error would keep the form filled and invite a duplicate
+            if ($reminderID <= 0) {
+                setEventMessages($langs->trans('ErrorQuickCreationReminder'), null, 'warnings');
+            }
+        }
     } else {
         $langs->load('errors');
         setEventMessages($project->error, $project->errors, 'errors');
@@ -852,7 +883,10 @@ if ($action == 'add') {
 
     if (!$error) {
         setEventMessage($langs->transnoentities('QuickCreationFrontendSuccess') . ' : <a href="' . DOL_URL_ROOT . '/projet/card.php?id=' . $projectID . '" target="_blank">'  . $project->ref . '</a>');
-        
+        if ($reminderID > 0) {
+            setEventMessages($langs->trans('QuickCreationReminderCreated', dol_print_date($reminderDate, 'dayhourtext', 'tzuserrel')), null);
+        }
+
         if (GETPOST('ajax_submission') == '1') {
             header('Content-Type: application/json');
             echo json_encode(['success' => true, 'redirect_url' => $_SERVER["PHP_SELF"]]);

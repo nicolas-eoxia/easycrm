@@ -336,6 +336,9 @@ require_once __DIR__ . '/../../../../saturne/core/tpl/medias/media_editor_modal.
             </div>
         <?php endif; ?>
 
+        <!-- Remind me later -->
+        <?php include __DIR__ . '/reedcrm_project_quickcreation_reminder_frontend.tpl.php'; ?>
+
         <!-- Media & Submit Block -->
         <div class="action-buttons-row" style="margin-top: 15px; margin-bottom: 15px;">
             <?php include __DIR__ . '/reedcrm_project_quickcreation_media_frontend.tpl.php'; ?>

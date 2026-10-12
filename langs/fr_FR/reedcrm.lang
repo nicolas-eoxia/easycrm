@@ -47,6 +47,16 @@ ProjectContactSameAsThirdPartyContact = Contact du projet identique au contact d
 
 # Frontend - Frontend
 QuickCreationFrontendSuccess = Ajout rapide d'opportunité effectué avec succès
+QuickCreationRemindMeLater = Me rappeler plus tard
+QuickCreationReminderDate = Date du rappel
+QuickCreationReminderIn3Days = Dans 3 jours
+QuickCreationReminderIn1Week = Dans 1 semaine
+QuickCreationReminderIn1Month = Dans 1 mois
+QuickCreationReminderTitlePlaceholder = Objet du rappel (facultatif)
+QuickCreationReminderDefaultLabel = Rappel : %s
+QuickCreationReminderCreated = Rappel programmé le %s
+ErrorQuickCreationReminderDateInPast = La date du rappel doit être dans le futur
+ErrorQuickCreationReminder = L'opportunité a bien été créée, mais pas son rappel
 
 
 
