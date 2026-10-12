@@ -2004,8 +2004,23 @@ class ActionsReedcrm
                 global $conf, $langs;
 
                 $langs->load('reedcrm@reedcrm');
+                $unbilledBannerMessage = $langs->trans('PropalUnbilledBanner');
                 ob_start();
-                require __DIR__ . '/../core/tpl/reedcrm_propal_unbilled_banner.tpl.php';
+                require __DIR__ . '/../core/tpl/reedcrm_unbilled_banner.tpl.php';
+                $this->resprints = ob_get_clean();
+            }
+        }
+
+        if (strpos($parameters['context'], 'contractcard') !== false) {
+            // Same red banner as the proposals, but Dolibarr has no tag on the contracts: the rule is checked live
+            require_once __DIR__ . '/../lib/reedcrm_contract_unbilled.lib.php';
+            if (reedcrmContractIsUnbilled($this->db, (int) $object->id)) {
+                global $conf, $langs;
+
+                $langs->load('reedcrm@reedcrm');
+                $unbilledBannerMessage = $langs->trans('ContractUnbilledBanner');
+                ob_start();
+                require __DIR__ . '/../core/tpl/reedcrm_unbilled_banner.tpl.php';
                 $this->resprints = ob_get_clean();
             }
         }

@@ -16,10 +16,13 @@
  */
 
 /**
- * \file    core/tpl/reedcrm_propal_unbilled_banner.tpl.php
+ * \file    core/tpl/reedcrm_unbilled_banner.tpl.php
  * \ingroup reedcrm
- * \brief   Red banner on top of a proposal card carrying the "not billed" tag.
+ * \brief   Red banner on top of a "not billed" proposal or contract card.
  *          Loaded by the formConfirm hook, printed between the tabs and the banner of the card.
+ *
+ * Variables expected:
+ *   $unbilledBannerMessage  string  Message of the banner, already translated
  */
 
 // Protection to avoid direct call of template
@@ -28,13 +31,11 @@ if (empty($conf) || !is_object($conf)) {
     exit;
 }
 
-global $langs;
-
 // The native Dolibarr cards never load reedcrm.min.css, and the banner is printed long before the footer that does
 ?>
 <link rel="stylesheet" href="<?php echo dol_escape_htmltag(dol_buildpath('/reedcrm/css/reedcrm.min.css', 1)); ?>">
 
-<div class="reedcrm-propal-unbilled-banner" role="alert">
-    <i class="fas fa-file-invoice-dollar reedcrm-propal-unbilled-banner-icon"></i>
-    <span><?php echo dol_escape_htmltag($langs->trans('PropalUnbilledBanner')); ?></span>
+<div class="reedcrm-unbilled-banner" role="alert">
+    <i class="fas fa-file-invoice-dollar reedcrm-unbilled-banner-icon"></i>
+    <span><?php echo dol_escape_htmltag($unbilledBannerMessage); ?></span>
 </div>
