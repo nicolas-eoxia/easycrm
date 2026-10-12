@@ -1124,3 +1124,6 @@ PropalUnbilledSyncButton = Tag the not billed proposals
 PropalUnbilledSyncDone = Tag put on %s proposal(s), removed from %s proposal(s)
 PropalUnbilledSyncError = Unable to update the tag of the not billed proposals
 PropalUnbilledBanner = This proposal is not billed
+
+# Not billed contracts
+ContractUnbilledBanner = This contract is not billed

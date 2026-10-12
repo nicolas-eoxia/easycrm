@@ -1244,3 +1244,6 @@ PropalUnbilledSyncButton = Taguer les devis non facturés
 PropalUnbilledSyncDone = Tag posé sur %s devis, retiré de %s devis
 PropalUnbilledSyncError = Impossible de mettre à jour le tag des devis non facturés
 PropalUnbilledBanner = Ce devis n'est pas facturé
+
+# Contrats non facturés
+ContractUnbilledBanner = Ce contrat n'est pas facturé
