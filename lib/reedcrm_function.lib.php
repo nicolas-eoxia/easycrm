@@ -585,8 +585,7 @@ function reedcrm_create_call_reminder(DoliDB $db, User $user, string $label, int
     $actionComm->label        = $label;
     $actionComm->fk_project   = $projectId;
     $actionComm->socid        = $socId;
-    $actionComm->userownerid  = $userId;
-    $actionComm->userassigned = [$userId => ['id' => $userId]];
+    $actionComm->userownerid  = $userId; // create() assigns the event to its owner
     if ($contactId > 0) {
         $actionComm->socpeopleassigned = [$contactId => $contactId];
     }
