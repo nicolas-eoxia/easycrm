@@ -84,6 +84,80 @@ window.reedcrm.quickcreation.event = function() {
 
   // Show opp percent value on range input
   $(document).on('input', '#opp_percent', window.reedcrm.quickcreation.showOppPercentValue);
+
+  // Remind me later
+  $(document).on('change', '#add_reminder', window.reedcrm.quickcreation.toggleReminder);
+  $(document).on('click', '.quickcreation-reminder__preset', window.reedcrm.quickcreation.applyReminderPreset);
+  $(document).on('input', '#reminder_date', window.reedcrm.quickcreation.clearReminderPreset);
+};
+
+/**
+ * Show or hide the reminder fields: a reminder needs a date, the first preset is picked by default
+ *
+ * @since   23.3.1
+ * @version 23.3.1
+ *
+ * @return {void}
+ */
+window.reedcrm.quickcreation.toggleReminder = function() {
+  var checked = $(this).is(':checked');
+  var $date   = $('#reminder_date');
+
+  $('.quickcreation-reminder__fields').toggleClass('is-open', checked);
+  $date.prop('required', checked).attr('min', window.reedcrm.quickcreation.toDateTimeLocal(new Date()));
+  if (checked && !$date.val()) {
+    $('.quickcreation-reminder__preset').first().trigger('click');
+  }
+};
+
+/**
+ * Fill the reminder date from a preset (in N days or N months, at 9:00)
+ *
+ * @since   23.3.1
+ * @version 23.3.1
+ *
+ * @return {void}
+ */
+window.reedcrm.quickcreation.applyReminderPreset = function() {
+  var $preset = $(this);
+  var date    = new Date();
+
+  date.setDate(date.getDate() + (parseInt($preset.data('days')) || 0));
+  date.setMonth(date.getMonth() + (parseInt($preset.data('months')) || 0));
+  date.setHours(9, 0, 0, 0);
+
+  $('#reminder_date').val(window.reedcrm.quickcreation.toDateTimeLocal(date));
+  $('.quickcreation-reminder__preset').removeClass('is-active');
+  $preset.addClass('is-active');
+};
+
+/**
+ * A date typed by hand no longer matches any preset
+ *
+ * @since   23.3.1
+ * @version 23.3.1
+ *
+ * @return {void}
+ */
+window.reedcrm.quickcreation.clearReminderPreset = function() {
+  $('.quickcreation-reminder__preset').removeClass('is-active');
+};
+
+/**
+ * Format a date as a datetime-local value (Y-m-d\TH:i), in the device timezone
+ *
+ * @since   23.3.1
+ * @version 23.3.1
+ *
+ * @param  {Date}   date Date to format
+ * @return {string}      Formatted date
+ */
+window.reedcrm.quickcreation.toDateTimeLocal = function(date) {
+  var pad = function(value) {
+    return (value < 10 ? '0' : '') + value;
+  };
+
+  return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
 };
 
 

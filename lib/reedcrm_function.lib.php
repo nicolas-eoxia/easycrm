@@ -553,6 +553,82 @@ function reedcrm_get_call_reminder_category_id(DoliDB $db, User $user): int
 }
 
 /**
+ * Create an automatic call reminder: a future to-do event and its browser notification.
+ *
+ * Same reminder as the ProCard/EventPro "AddReminder" checkbox: tagged with the dedicated call
+ * reminder category so the dashboard lists it in its upcoming reminders, and notified
+ * REEDCRM_QUICK_CREATION_REMINDER_OFFSET / _UNIT before its date.
+ *
+ * @param  DoliDB $db        Database handler
+ * @param  User   $user      User creating the reminder
+ * @param  string $label     Label of the reminder event
+ * @param  int    $date      Date of the reminder (timestamp)
+ * @param  int    $userId    User to remind
+ * @param  int    $projectId Linked project id (0 = none)
+ * @param  int    $socId     Linked thirdparty id (0 = none)
+ * @param  int    $contactId Linked contact id (0 = none)
+ * @return int               Id of the reminder event (> 0), or -1 on error
+ */
+function reedcrm_create_call_reminder(DoliDB $db, User $user, string $label, int $date, int $userId, int $projectId = 0, int $socId = 0, int $contactId = 0): int
+{
+    require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
+    require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+    require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncommreminder.class.php';
+    require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+
+    $db->begin();
+
+    $actionComm               = new ActionComm($db);
+    $actionComm->type_code    = 'AC_OTH';
+    $actionComm->percentage   = 0; // A reminder is a future "to do"
+    $actionComm->datep        = $date;
+    $actionComm->label        = $label;
+    $actionComm->fk_project   = $projectId;
+    $actionComm->socid        = $socId;
+    $actionComm->userownerid  = $userId; // create() assigns the event to its owner
+    if ($contactId > 0) {
+        $actionComm->socpeopleassigned = [$contactId => $contactId];
+    }
+
+    $actionCommID = $actionComm->create($user);
+    if ($actionCommID <= 0) {
+        dol_syslog(__FUNCTION__ . ' ' . $actionComm->error . ' ' . implode(', ', $actionComm->errors), LOG_ERR);
+        $db->rollback();
+        return -1;
+    }
+
+    $categoryID = reedcrm_get_call_reminder_category_id($db, $user);
+    if ($categoryID > 0) {
+        $category = new Categorie($db);
+        if ($category->fetch($categoryID) > 0) {
+            $category->add_type($actionComm, 'actioncomm');
+        }
+    }
+
+    $offsetValue = getDolGlobalInt('REEDCRM_QUICK_CREATION_REMINDER_OFFSET', 30);
+    $offsetUnit  = getDolGlobalString('REEDCRM_QUICK_CREATION_REMINDER_UNIT', 'i');
+
+    $actionCommReminder                = new ActionCommReminder($db);
+    $actionCommReminder->dateremind    = dol_time_plus_duree($date, -1 * $offsetValue, $offsetUnit);
+    $actionCommReminder->typeremind    = 'browser';
+    $actionCommReminder->offsetvalue   = $offsetValue;
+    $actionCommReminder->offsetunit    = $offsetUnit;
+    $actionCommReminder->fk_actioncomm = $actionCommID;
+    $actionCommReminder->fk_user       = $userId;
+    $actionCommReminder->status        = ActionCommReminder::STATUS_TODO;
+
+    if ($actionCommReminder->create($user) <= 0) {
+        dol_syslog(__FUNCTION__ . ' ' . $actionCommReminder->error . ' ' . implode(', ', $actionCommReminder->errors), LOG_ERR);
+        $db->rollback();
+        return -1;
+    }
+
+    $db->commit();
+
+    return $actionCommID;
+}
+
+/**
  * Resolve the person to call for an opportunity.
  *
  * A project carries its caller in three mutually exclusive ways, in decreasing priority:
